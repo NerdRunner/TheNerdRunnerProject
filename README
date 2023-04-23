@@ -1,0 +1,17 @@
+#The Nerd Runner Project - TNRP
+
+Opensource analysis of .fit files
+
+1. All data is stored in a MYSQL database. So make sure you have a MYSQL - Server running.
+2. Set up your credentials in mysqlCredentials
+3. Start by creating the tables (mysqltools.createActivityTable, mysqltools.createUserTable)
+
+Importing the activities
+
+
+Used-Packages:
+mysql-connector-python
+fitparse
+
+Versions:
+0.1: Initial release
