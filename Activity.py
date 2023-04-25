@@ -1,3 +1,7 @@
+import datetime
+import math
+
+from Sportsman import Sportsman
 from Trackpoint import Trackpoint
 
 
@@ -13,7 +17,7 @@ class Activity:
         '''
         self.tpList = tpList
         self.start = tpList[0].timestamp
-        self.trimp = 0
+        self.trimp = self.calculateTRIMP()
 
     def print(self):
         print("Type: ",self.tpList[0].typ)
@@ -64,12 +68,43 @@ class Activity:
         return rv
 
     def getTrimp(self):
-        return -1
+        return self.trimp
 
-    def addActivitytoTable(self,mydb):
+    def calculateTRIMP(self):
+        '''
+        calculates the trimp of the activity
+        :return: trimp
+        '''
+        tpl = self.getTPList()
+        trimp = 0.0
+        if tpl is not None:
+            ts = tpl[0].timestamp
+            if ts is not None:
+                cpDate = ts
+            else:
+                cpDate = datetime.datetime.today()
+            sm = Sportsman()
+            rhr_maxHR = sm.getHRValues(cpDate)
+            rhr = rhr_maxHR[3]
+            hrmax = rhr_maxHR[2]
+            y = 1.92
+            for i in range(len(tpl) - 2):
+                currentHR = tpl[i].hr
+                if currentHR is not None:
+                    hrrfrac = (currentHR - rhr) / (hrmax - rhr)
+                    d = (tpl[i + 1].timestamp - tpl[i].timestamp).total_seconds() / 60.0  # Dauer zwischen zwei Trackpunkten in Minuten
+                    tr = d * hrrfrac * 0.64 * math.exp(y * hrrfrac)
+                    trimp += tr
+                else:
+                    trimp += 0
+
+
+        return trimp
+
+    def addActivitytoDatabse(self,mydb):
         '''
         Adds the activity to the database
-        :param act:
+        :param act: Activity to add
         :return:
         '''
 
@@ -92,7 +127,7 @@ class Activity:
         '''
         Creates a Linestring object out of an Activity for desired values
         :param act: Activity
-        :param typ: "hr" or "latlon"
+        :param typ: "hr" or "latlon" String
         :return:
         '''
         s = "LINESTRING("
