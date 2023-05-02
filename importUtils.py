@@ -3,6 +3,8 @@ import os
 
 from fitparse import FitFile
 
+import mysqlCredentials
+import mysqltools
 from Activity import Activity
 from Trackpoint import Trackpoint
 
@@ -25,9 +27,6 @@ def FitFileToTPList(f)->Trackpoint:
             if tp.lat is not None:  # Wenn Koordinaten vorhanden sind
                 tp.lat = tp.lat * (180 / 2147483648.0)  # Umrechnung Semicircles in Koordinaten
                 tp.lon = record.get_value('position_long') * (180 / 2147483648.0)
-            #else:  # Ansonten alles 0er Koordinaten
-            #    tp.lat = 0
-            #    tp.lon = 0
             ts = record.get_value('timestamp')
             if not isinstance(ts, datetime.datetime):
                 ts = datetime.now()
@@ -35,20 +34,52 @@ def FitFileToTPList(f)->Trackpoint:
             tp.distance = record.get_value('distance')
             tp.hr = record.get_value('heart_rate')
             tp.speed = record.get_value('enhanced_speed')
-            # if record.get_value('activity_type') !=None:
-            #    tp.typ = record.get_value('activity_type')
-            # else:
-            #    tp.typ = "0"
             tp.typ = typ
 
             tpList.append(tp)
         return tpList
 
-#f = '/home/simon/ownCloud/clientsync/NerdRunner/garmin-connect-export-master/MyActivities/activity_10831909205.fit'
+def addFitFilesToDB(mydb, path):
+    '''
+    Adds all the fit Files to the Database.
+    :return:
+    '''
+    dir_list = []
+    dir_list += [each for each in os.listdir(path) if each.endswith('.fit')]
+    dir_list = checkForMissingEntries(mydb, dir_list)
+    i = 0
+    nFiles = len(dir_list)
+    for ff in dir_list:
+        if ff.endswith('.fit'):
+            imp = FitFileToTPList(path + ff)
+            act = Activity(imp, ff, mydb)
+            act.filename = ff
+            act.addActivitytoDatabse(mydb)
+            ps = act.print_short()
+            print("Done: "+str(i/nFiles*100.0) + " % - Added: "+ps)
+            i = i + 1
+        else:
+            print("Skipping: "+ff)
 
-#t2 = FitFileToTPList(f)
-#act = Activity(t2)
 
-#act.print()
+    return
 
-#print("ende")
+
+def checkForMissingEntries(mydb, ff):
+    '''
+    Compares the list of given files with the one named in the database and returns the ones which are not in the database
+    :param ff:
+    :return:
+    '''
+    mycursor = mydb.cursor()
+
+    sql = "SELECT dateiname FROM "+mysqlCredentials.activitytable
+    mycursor.execute(sql)
+    sqlresult = mycursor.fetchall()
+
+    srList = []
+    for sr in sqlresult: #convert to list
+        srList.append(sr[0])
+
+    delta = set(ff) - set(srList) #difference between list in mysql database and files in folder
+    return delta

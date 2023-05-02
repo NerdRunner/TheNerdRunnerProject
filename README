@@ -1,18 +1,25 @@
-#The Nerd Runner Project - TNRP
+#### The Nerd Runner Project - TNRP ####
 
 Opensource analysis of .fit files
 
+I'm not that super programmer, so don't expect perfect code :)
+
 1. All data is stored in a MYSQL database. So make sure you have a MYSQL - Server running.
-2. Set up your credentials in mysqlCredentials
-3. Start by creating the tables (mysqltools.createActivityTable, mysqltools.createUserTable)
-
-Importing the activities
-
+2. Set up your credentials in mysqlCredentials.
+3. Start by creating the tables (mysqltools.createAllTables)
+4. Set up user information
+5. Start importing activities
 
 Used-Packages:
 mysql-connector-python
 fitparse
 
 Versions:
-0.2: Added Trimp calculation, Sportsman class, Table userstats
-0.1: Initial release
+### 0.3:
+- Import all files of a folder,
+- check for entries which are already in database so not to import them again,
+- Trimp calculation based on gender. Added Table userhealth and usergeneral
+- Updated examples
+- Creation of all necessary tables in one function
+### 0.2: Added Trimp calculation, Sportsman class, Table userstats
+### 0.1: Initial release

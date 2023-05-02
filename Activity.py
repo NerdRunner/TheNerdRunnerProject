@@ -10,14 +10,17 @@ class Activity:
     Activity class
     '''
 
-    def __init__(self, tpList: Trackpoint):
+    def __init__(self, tpList: Trackpoint, file, mydb):
         '''
-        Activity init
-        :param tpList: Trackpoint[]
+        Activity class
+        :param tpList: List of trackpoints
+        :param file: Filename of the fit file
+        :param mydb: MYSQL-Connector required for TRIMP-Calculation
         '''
         self.tpList = tpList
         self.start = tpList[0].timestamp
-        self.trimp = self.calculateTRIMP()
+        self.trimp = self.calculateTRIMP(mydb)
+        self.filename = file
 
     def print(self):
         print("Type: ",self.tpList[0].typ)
@@ -26,6 +29,9 @@ class Activity:
         print("Length [m]: ", self.getStrecke())
         print("Mean HR: ", self.meanHR())
         print("TRIMP: ", self.trimp)
+
+    def print_short(self):
+        return self.tpList[0].typ + " - " + str(self.tpList[0].timestamp) + " - " + str(self.getStrecke()/1000)
 
     def meanHR(self):
         hr = 0
@@ -70,7 +76,7 @@ class Activity:
     def getTrimp(self):
         return self.trimp
 
-    def calculateTRIMP(self):
+    def calculateTRIMP(self, mydb):
         '''
         calculates the trimp of the activity
         :return: trimp
@@ -83,22 +89,24 @@ class Activity:
                 cpDate = ts
             else:
                 cpDate = datetime.datetime.today()
-            sm = Sportsman()
-            rhr_maxHR = sm.getHRValues(cpDate)
+            sm = Sportsman(None, None, None)
+            sm.getFromDB(mydb)
+            rhr_maxHR = sm.getVitalValues(mydb, cpDate)
             rhr = rhr_maxHR[3]
             hrmax = rhr_maxHR[2]
-            y = 1.92
+            y = 1.67 #Scale factor for women
+            if sm.gender == "m":
+                y = 1.92 #Scale factor for men
             for i in range(len(tpl) - 2):
                 currentHR = tpl[i].hr
                 if currentHR is not None:
                     hrrfrac = (currentHR - rhr) / (hrmax - rhr)
                     d = (tpl[i + 1].timestamp - tpl[i].timestamp).total_seconds() / 60.0  # Dauer zwischen zwei Trackpunkten in Minuten
+
                     tr = d * hrrfrac * 0.64 * math.exp(y * hrrfrac)
                     trimp += tr
                 else:
                     trimp += 0
-
-
         return trimp
 
     def addActivitytoDatabse(self,mydb):
@@ -110,13 +118,16 @@ class Activity:
 
         mycursor = mydb.cursor()
         sql = "INSERT INTO activities VALUES (%s, %s, %s, %s, %s, %s, ST_GeomFromText(%s), %s, ST_GeomFromText(%s))"
+        hrlist = None
+        latlonlist = None
+        tp0 = self.getTPList()[0]
         hrlist = self.createPointListforMysql("hr")
         latlonlist = self.createPointListforMysql("latlon")
         if self.getTPList() is not None:
-            val = (None, self.getTPList()[0].timestamp, self.getTPList()[0].timestamp, self.getTPList()[0].typ, self.getStrecke(),
+            val = (None, self.filename, self.getTPList()[0].timestamp, self.getTPList()[0].typ, self.getStrecke(),
             self.meanHR(), hrlist, self.getTrimp(), latlonlist)
         else:
-            val = (self.getTPList[0].timestamp, None, None, self.getStrecke(), hrlist, self.getTrimp(), None)
+            val = (self.getTPList[0].timestamp, None, None, self.getStrecke(), hrlist, self.getTrimp(), latlonlist)
 
         mycursor.execute(sql, val)
         mydb.commit()
@@ -137,11 +148,13 @@ class Activity:
                 if typ == "latlon":
                     if t.lat is not None and t.lon is not None:
                         s += str(t.lat) + " " + str(t.lon) + ", "
-                if typ == "hr":
+                if typ == "hr" and t.hr is not None:
                     s += str(1) + " " + str(t.hr) + ", "
             s = s[:-2]  # Letzte zwei Zeichen (Komma und Leerzeichen) entfernen
         else:
             s += "0 0, 1 1"
         s += ")"
+        if s == "LINESTRIN)": #If hr or lat/lon is not there, then this string would be the result and lead to error
+            s = "LINESTRING(0 0, 1 1)"
         return s
 

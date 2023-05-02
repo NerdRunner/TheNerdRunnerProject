@@ -6,4 +6,5 @@ db = "tnrp"
 
 #Table names
 activitytable = "activities"
-userstats = "userstats"
+userstats_health = "userhealth"
+userstats_general = "usergeneral"
