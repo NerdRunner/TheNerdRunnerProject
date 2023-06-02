@@ -13,8 +13,15 @@ I'm not that super programmer, so don't expect perfect code :)
 Used-Packages:
 mysql-connector-python
 fitparse
+matplotlib
+customtkinter
 
 Versions:
+### 0.4:
+- Plot: totalperWeekPlot
+- Running Metrics (CTL, ATL)
+- Some functions to grab data from the database
+- Settings table
 ### 0.3:
 - Import all files of a folder,
 - check for entries which are already in database so not to import them again,
