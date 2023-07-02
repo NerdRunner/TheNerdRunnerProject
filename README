@@ -17,6 +17,9 @@ matplotlib
 customtkinter
 
 Versions:
+### 0.5:
+- Exponential weights of trimp values for CTL and ATL. Calculation of averaged, summed weighted daily trimp values
+- If no GPS-Distance is available (e.g. indoor swimming) take the distance from the laps-field in the fit-file
 ### 0.4:
 - Plot: totalperWeekPlot
 - Running Metrics (CTL, ATL)

@@ -1,5 +1,5 @@
 import datetime
-
+import numpy as np
 import Utils
 import activityMetrics
 import importUtils
@@ -15,7 +15,7 @@ file =  'activity_10831909205.fit'
 #importUtils.addFitFilesToDB(mydb, path)
 
 #td = Utils.getCalendarWeekFromDate(datetime.datetime.today())
-#d1, d2= Utils.getDateRangeFromWeek(2023, 18)
+d1, d2= Utils.getDateRangeFromWeek(2023, 18)
 #print(d1, d2)
 #print(Utils.dayOfYear(datetime.datetime.today()))
 
@@ -29,8 +29,10 @@ file =  'activity_10831909205.fit'
 #print(avg, ctl)
 #mysqltools.getFitFiles()
 #mysqltools.createSettingsTable(mydb)
-mysqltools.setSetting(mydb, "hunger", "wenig")
+#activityMetrics.summary(mydb, mysqlCredentials.)
+#ll = mysqltools.getActivitiesByDateRange(mydb, "running", d1, d2)
+#ll = activityMetrics.summary(mydb, "running" d1, d2)
 #print(mysqltools.getSetting(mydb, "wetter"))
-print("ende")
+#print(ll)
 
 

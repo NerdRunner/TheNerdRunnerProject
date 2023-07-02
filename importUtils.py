@@ -4,7 +4,6 @@ import os
 from fitparse import FitFile
 
 import mysqlCredentials
-import mysqltools
 from Activity import Activity
 from Trackpoint import Trackpoint
 
@@ -18,6 +17,7 @@ def FitFileToTPList(f)->Trackpoint:
     if os.path.isfile(f) and f.endswith('.fit'):
         fitfile = FitFile(f)
         tpList = []
+        lapList=[]
         mess = fitfile.get_messages("session")
         for t in mess:
             typ = t.get_value("sport")
@@ -36,12 +36,21 @@ def FitFileToTPList(f)->Trackpoint:
             tp.speed = record.get_value('enhanced_speed')
             tp.typ = typ
 
+
+            if tp.lat is None: #If no gpsdata is available, e.g. indoor swimming, get the distance from the laps
+                d = 0
+                for lap in fitfile.get_messages('lap'):
+                    d+= lap.get_value('total_distance')
+                tp.distance = d
+
             tpList.append(tp)
+
         return tpList
 
 def addFitFilesToDB(mydb, path):
     '''
-    Adds all the fit Files to the Database.
+    Adds all the fit Files in the path (folder) to the Database.
+    Files already in the Database are omitted.
     :return:
     '''
     dir_list = []
@@ -50,7 +59,7 @@ def addFitFilesToDB(mydb, path):
     i = 0
     nFiles = len(dir_list)
     for ff in dir_list:
-        if ff.endswith('.fit'):
+        #if ff.endswith('.fit'):
             imp = FitFileToTPList(path + ff)
             act = Activity(imp, ff, mydb)
             act.filename = ff
@@ -58,10 +67,40 @@ def addFitFilesToDB(mydb, path):
             ps = act.print_short()
             print("Done: "+str(i/nFiles*100.0) + " % - Added: "+ps)
             i = i + 1
-        else:
-            print("Skipping: "+ff)
+        #else:
+         #   print("Skipping: "+ff)
+    return
 
-
+def addFitFilesToDBWithStatus(mydb, path, app, rv):
+    '''
+    Adds all the fit Files in the path (folder) to the Database.
+    Files already in the Database are omitted.
+    :param path: the path (folder)
+    :param rv: tkinter label to set the current progress
+    :return:
+    '''
+    dir_list = []
+    dir_list += [each for each in os.listdir(path) if each.endswith('.fit')]
+    dir_list = checkForMissingEntries(mydb, dir_list)
+    i = 0
+    nFiles = len(dir_list)
+    rv.configure(text="Adding "+str(nFiles) +" Activities")
+    app.update()
+    for ff in dir_list:
+        #if ff.endswith('.fit'):
+            imp = FitFileToTPList(path + ff)
+            act = Activity(imp, ff, mydb)
+            act.filename = ff
+            act.addActivitytoDatabse(mydb)
+            ps = act.print_short()
+            percentage = i/nFiles*100.0
+            percentage = "{:4.2f}".format(percentage)
+            rv.configure(text=str(percentage) + " % done" )
+            app.update()
+            #print("Done: "+str(i/nFiles*100.0) + " % - Added: "+ps)
+            i = i + 1
+        #else:
+         #   print("Skipping: "+ff)
     return
 
 

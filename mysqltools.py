@@ -1,8 +1,10 @@
+import datetime
 import os
 from datetime import timedelta
 
 import mysql.connector
 import mysqlCredentials
+import mysqltools
 
 
 def connect():
@@ -104,13 +106,13 @@ def getSetting(mydb, name):
     gets the value (string) of the setting
     :param mydb:
     :param name:
-    :return:
+    :return: (id, name, value)
     '''
     cursor = mydb.cursor()
-    sql = "SELECT * FROM " + mysqlCredentials.settings
+    sql = "SELECT * FROM " + mysqlCredentials.settings + " WHERE name='"+name+"'"
     cursor.execute(sql)
     myresult = cursor.fetchall()
-    return myresult
+    return myresult[0]
 
 def getLastActivities(mydb, activityType, lastN):
     '''
@@ -155,12 +157,29 @@ def getByDateRange(mydb, col, d1, d2):
     :return: (date, col)
     '''
     mycursor = mydb.cursor()
-    #d2 = d1 - timedelta(days=nDays)
     sql = "SELECT datum," + col + " from " + mysqlCredentials.activitytable + " WHERE DATE(datum) <= '" + d1.strftime(
         "%Y-%m-%d") + "' and DATE(datum) >= '" + d2.strftime("%Y-%m-%d") + "' ORDER by datum DESC"
     mycursor.execute(sql)
     myresult = mycursor.fetchall()
     return myresult
 
-def getFitFiles():
-    os.system()
+def getActivitiesByDateRange(mydb, act, d1, d2):
+    '''
+    Gets all activities for a given date range
+    :param mydb: MYSQL-Handler
+    :param act: Activity-Type
+    :param d1: first date
+    :param d2: second date
+    :return:
+    '''
+    mycursor = mydb.cursor()
+    sql = "SELECT * from " + mysqlCredentials.activitytable + " WHERE typ = '"+act+"' and DATE(datum) >= '" + d1.strftime(
+        "%Y-%m-%d") + "' and DATE(datum) <= '" + d2.strftime("%Y-%m-%d") + "' ORDER by datum DESC"
+
+    mycursor.execute(sql)
+    myresult = mycursor.fetchall()
+    return myresult
+
+def getFitFiles(mydb):
+    comm = mysqltools.getSetting(mydb, "importScript")
+    os.system(comm[2])

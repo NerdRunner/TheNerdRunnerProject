@@ -32,7 +32,7 @@ def totalperWeekPlot(mydb, columnName, year, cw_start, cw_end):
         xticks.append(d)
         d=d+1
 
-    fig = Figure(figsize=(5, 4), dpi=100)
+    fig = Figure(figsize=(4.5,4.5), dpi=100)
     ax = fig.add_subplot()
     ax.bar(xval, yval)
     ax.set_xticks(xticks, minor=False)
@@ -74,7 +74,7 @@ def totalperWeekAndActivityPlot(mydb, columnName, actList, year, cw_start, cw_en
         xticks.append(d)
         d=d+1
 
-    fig = Figure(figsize=(5, 4), dpi=100)
+    fig = Figure(figsize=(4, 3), dpi=100)
     ax = fig.add_subplot()
     ax.bar(xval, yval)
     ax.set_xticks(xticks, minor=False)
@@ -105,7 +105,7 @@ def PMC(mydb, d1, nDays):
         yvalTSB.append(ctl - atl)
         d = d - datetime.timedelta(days=1)
         n = n+1
-    fig = Figure(figsize=(5, 4), dpi=100)
+    fig = Figure(figsize=(4.5, 4.5), dpi=100)
     ax = fig.add_subplot()
     ax.plot(xval, yvalCTL, label="CTL")
     ax.xaxis.set_major_formatter(myFmt)
