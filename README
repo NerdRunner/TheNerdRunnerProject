@@ -15,8 +15,13 @@ mysql-connector-python
 fitparse
 matplotlib
 customtkinter
+osmnx
 
 Versions:
+### 0.6:
+mysqltools.getLastActivities: Possibility to get all activities using an asterisk ["*"]
+plotUtils.plotActivityMap: Plots the course of an activity
+SingleActivityTools: Tools to analyse a single activity
 ### 0.5:
 - Exponential weights of trimp values for CTL and ATL. Calculation of averaged, summed weighted daily trimp values
 - If no GPS-Distance is available (e.g. indoor swimming) take the distance from the laps-field in the fit-file

@@ -6,6 +6,11 @@ import matplotlib.pyplot as plt
 import Utils
 import activityMetrics
 import mysqlCredentials
+from SingleActivityTools import getPointListfromActivity
+import osmnx as ox
+from matplotlib.path import Path
+import matplotlib.patches as patches
+
 
 def totalperWeekPlot(mydb, columnName, year, cw_start, cw_end):
     '''
@@ -132,3 +137,51 @@ def setAxisColor(ax, col):
     ax.xaxis.label.set_color(col)
     ax.title.set_color(col)
 
+def plotActivityMap(mydb, act):
+    xlist, ylist, pointlist = getPointListfromActivity(mydb, act)
+    # change to latitude, longitude order
+    plinv = [(i[1], i[0]) for i in pointlist]
+    # BoundingBox
+    fig=None
+    ax=None
+    if(len(xlist)>0 and len(ylist)>0):
+        max_x = max(xlist)
+        max_y = max(ylist)
+        min_x = min(xlist)
+        min_y = min(ylist)
+        G = ox.graph_from_bbox(max_y, min_y, max_x, min_x, network_type='walk', simplify=True)
+        ox.settings.log_console=True
+        # Plot
+        fig, ax = ox.plot_graph(G, edge_color='k', bgcolor='w', show=False, close=False, figsize=(5,2.5))
+        path = Path(plinv)
+        patch = patches.PathPatch(path, edgecolor='red', fill=False, lw=2)
+        ax.add_patch(patch)
+    #plt.show()
+    return fig, ax
+
+def plotActivityHR(mydb, act):
+    ylist, xlist, pointlist = getPointListfromActivity(mydb, act, typ="hr")
+    fig = Figure(figsize=(8, 1.8), dpi=100)
+    ax = fig.add_subplot()
+    xlist = relativetoFirstElement(xlist)
+    xlist = [i/60 for i in xlist]
+    ax.plot(xlist, ylist, label="HR")
+    #ax.xaxis.set_major_formatter(myFmt)
+    ax.set_xlabel("min")
+    ax.set_ylabel("bpm")
+    ax.set_title("Heartrate")
+    ax.set_facecolor("black")
+    fig.set_facecolor("black")
+    ax.legend(facecolor="black", labelcolor='linecolor', frameon=False)
+    return fig, ax
+
+def relativetoFirstElement(ll):
+    '''
+    Returns all elements relative to the first element
+    :param ll:
+    :return:
+    '''
+    rv = []
+    for i in ll:
+        rv.append(i-ll[0])
+    return rv

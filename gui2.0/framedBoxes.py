@@ -2,11 +2,7 @@ import math
 
 import customtkinter
 
-import mysqlCredentials
 import mysqltools
-import plotUtils
-from gui import lcarsSettings
-from gui.framedPlot import framedPlot
 
 
 class framedBoxes(customtkinter.CTkFrame):

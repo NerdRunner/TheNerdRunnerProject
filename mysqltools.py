@@ -114,11 +114,25 @@ def getSetting(mydb, name):
     myresult = cursor.fetchall()
     return myresult[0]
 
+def linestringtoList(ls):
+    rv=[]
+    spl = ls.split(",")
+    start = spl[0].split("(")[1]
+    spl[0] = start
+    end = spl[len(spl)-1].split(")")[0]
+    spl[len(spl)-1] = end
+
+    for t in spl:
+        s = t.split(" ")
+        tp = [float(s[0]), float(s[1])]
+        rv.append(tp)
+    return rv
+
 def getLastActivities(mydb, activityType, lastN):
     '''
     Gets the lastN activities of a given type
     :param mydb: MySQL-Handler
-    :param activityType: activityType[]
+    :param activityType: activityType[], can also be a asterisk ["*"]
     :param lastN: Last activities to get
     :return:
     '''
@@ -127,7 +141,10 @@ def getLastActivities(mydb, activityType, lastN):
     for a in activityType:
         actlist = actlist+" typ = '" + a + "' OR "
     actlist = actlist[:-4]
-    sql = "SELECT * from " + mysqlCredentials.activitytable + " WHERE "+actlist + " ORDER by datum DESC LIMIT "+str(lastN)+""
+    sql = "SELECT * from " + mysqlCredentials.activitytable + " WHERE " + actlist + " ORDER by datum DESC LIMIT " + str(
+        lastN) + ""
+    if activityType[0] == "*":
+        sql = "SELECT * from " + mysqlCredentials.activitytable + " ORDER by datum DESC LIMIT " + str(lastN) + ""
     mycursor.execute(sql)
     myresult = mycursor.fetchall()
     return myresult

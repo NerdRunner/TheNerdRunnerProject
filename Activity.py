@@ -149,7 +149,8 @@ class Activity:
                     if t.lat is not None and t.lon is not None:
                         s += str(t.lat) + " " + str(t.lon) + ", "
                 if typ == "hr" and t.hr is not None:
-                    s += str(1) + " " + str(t.hr) + ", "
+                    dt = datetime.datetime.timestamp(t.timestamp)
+                    s += str(dt) + " " + str(t.hr) + ", "
             s = s[:-2]  # Letzte zwei Zeichen (Komma und Leerzeichen) entfernen
         else:
             s += "0 0, 1 1"

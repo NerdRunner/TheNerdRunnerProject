@@ -1,10 +1,6 @@
-import datetime
 from tkinter import ttk
 
 import customtkinter
-
-import mysqltools
-from gui import lcarsSettings
 
 
 class framedTable(customtkinter.CTkFrame):
@@ -49,14 +45,20 @@ class framedTable(customtkinter.CTkFrame):
             self.table.delete(item)
         return
 
-    def insertMySQLTableValues(self, actList):
+    def insertMySQLTableValues(self, actList, name=False):
         '''
         :param actList: List of activities got from mysqltools. ... getactivities
+        :name: true or false whether the name of the activity file shall be included in the Table
         :return:
         '''
         rv = []
         for act in actList:
             dt = str(act[2].day)+"."+str(act[2].month)+"."+str(act[2].year)
-            t = (dt, act[3], act[4], act[5], act[7])
+            if name==True:
+                t = (act[1], dt, act[3], act[4], act[5], act[7])
+            else:
+                t = (dt, act[3], act[4], act[5], act[7])
+
+
             rv.append(t)
         self.insertValuesIntoTable(rv)
