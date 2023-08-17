@@ -1,15 +1,21 @@
 import datetime
+from datetime import datetime
+from datetime import timedelta
 
+import matplotlib.patches as patches
+import osmnx as ox
 from matplotlib.dates import DateFormatter
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
+from matplotlib.path import Path
+
 import Utils
 import activityMetrics
 import mysqlCredentials
+import mysqltools
 from SingleActivityTools import getPointListfromActivity
-import osmnx as ox
-from matplotlib.path import Path
-import matplotlib.patches as patches
+from Sportsman import Sportsman
+
+from gui2 import lcarsSettings
 
 
 def totalperWeekPlot(mydb, columnName, year, cw_start, cw_end):
@@ -108,7 +114,7 @@ def PMC(mydb, d1, nDays):
         yvalCTL.append(ctl)
         yvalATL.append(atl)
         yvalTSB.append(ctl - atl)
-        d = d - datetime.timedelta(days=1)
+        d = d - timedelta(days=1)
         n = n+1
     fig = Figure(figsize=(4.5, 4.5), dpi=100)
     ax = fig.add_subplot()
@@ -137,6 +143,16 @@ def setAxisColor(ax, col):
     ax.xaxis.label.set_color(col)
     ax.title.set_color(col)
 
+def plotLatLong(mydb, act):
+    xlist, ylist, pointlist = getPointListfromActivity(mydb, act[0])
+    fig = Figure(figsize=(5,2), dpi=100)
+    ax = fig.add_subplot()
+    ax.plot(xlist, ylist, "red", label="HR")  # "black" ist die Linienfarbe
+    ax.set_facecolor("black")
+    fig.set_facecolor("black")
+    #ax.legend(facecolor="black", labelcolor='linecolor', frameon=False)
+    return fig, ax
+
 def plotActivityMap(mydb, act):
     xlist, ylist, pointlist = getPointListfromActivity(mydb, act)
     # change to latitude, longitude order
@@ -160,12 +176,12 @@ def plotActivityMap(mydb, act):
     return fig, ax
 
 def plotActivityHR(mydb, act):
-    ylist, xlist, pointlist = getPointListfromActivity(mydb, act, typ="hr")
+    ylist, xlist, pointlist = getPointListfromActivity(mydb, act[0], typ="hr")
     fig = Figure(figsize=(8, 1.8), dpi=100)
     ax = fig.add_subplot()
     xlist = relativetoFirstElement(xlist)
     xlist = [i/60 for i in xlist]
-    ax.plot(xlist, ylist, label="HR")
+    ax.plot(xlist, ylist, "black",label="HR") #"black" ist die Linienfarbe
     #ax.xaxis.set_major_formatter(myFmt)
     ax.set_xlabel("min")
     ax.set_ylabel("bpm")
@@ -173,11 +189,44 @@ def plotActivityHR(mydb, act):
     ax.set_facecolor("black")
     fig.set_facecolor("black")
     ax.legend(facecolor="black", labelcolor='linecolor', frameon=False)
+
+    addHRZonebanner(mydb, ax,act[1])
+
+
+
     return fig, ax
+
+def addHRZonebanner(mydb, ax, dt):
+    '''
+    :param mydb: MySQL-Handler
+    :param ax: ax - Object
+    :param dt: date 'd.m.Y'
+    :return: -
+    '''
+    #TODO: Check HR Ranges
+
+    # Regeneration: <60%
+    # GA1: 60-75%
+    # GA2: 75-85%
+    # E: 85 - 95%
+    sm = Sportsman("dummy", "1.1.2020", "m")
+    sm.getFromDB(mydb)
+    dto = datetime.strptime(dt, '%d.%m.%Y')
+    maxHR = sm.getVitalValues(mydb, dto)[2]
+    hRZones = str.split(mysqltools.getSetting(mydb, "hrZones")[2], ",")
+    hRZones = [float(i) for i in hRZones]
+    #TODO: LCARS - Farben verwenden
+    ax.axhspan(hRZones[0]*maxHR, hRZones[1]*maxHR, facecolor=lcarsSettings.ice, alpha=0.5, zorder=-100)
+    ax.axhspan(hRZones[1]*maxHR, hRZones[2]*maxHR, facecolor=lcarsSettings.green, alpha=0.5, zorder=-100)
+    ax.axhspan(hRZones[2] * maxHR, hRZones[3] * maxHR, facecolor=lcarsSettings.yellow, alpha=0.5, zorder=-100)
+    ax.axhspan(hRZones[3]*maxHR, hRZones[4]*maxHR, facecolor=lcarsSettings.red, alpha=0.5, zorder=-100)
+
+    return
+
 
 def relativetoFirstElement(ll):
     '''
-    Returns all elements relative to the first element
+    Returns all elements relative (by substraction) to the first element
     :param ll:
     :return:
     '''

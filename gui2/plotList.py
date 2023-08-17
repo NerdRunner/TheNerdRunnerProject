@@ -2,7 +2,7 @@ import customtkinter
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
-import gui.lcarsSettings
+import lcarsSettings
 
 
 class plotList(customtkinter.CTkFrame):
@@ -11,7 +11,7 @@ class plotList(customtkinter.CTkFrame):
 
         self.canvasList = []
 
-        self.color = gui.lcarsSettings.magenta
+        self.color = lcarsSettings.magenta
         self.configure(fg_color="black", border_width=0)
         i = 0
         for f in figList:

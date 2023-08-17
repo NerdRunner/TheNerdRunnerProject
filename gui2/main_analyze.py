@@ -19,17 +19,17 @@ class main_analyze():
             updateLowerFrame(curItem)
 
         def updateLowerFrame(curItem):
-            act = table.table.item(curItem)['values'][0]
-            fig, ax = plotUtils.plotActivityMap(mydb, act)
+            act = table.table.item(curItem)['values']
+            fig, ax = plotUtils.plotLatLong(mydb, act)
             if(fig!=None):
                 mapFrame.plot = plotList(mapFrame, [fig])
-                mapFrame.plot.grid(row=1, column=0, padx=10, pady=10)
+                mapFrame.plot.grid(row=0, column=0, padx=10, pady=10, sticky="nsw")
 
             fig2, ax2 = plotUtils.plotActivityHR(mydb, act)
             if (fig2 != None):
                 hrFrame.plot = plotList(hrFrame, [fig2])
                 plotUtils.setAxisColor(ax2, lcarsSettings.yellow)
-                hrFrame.plot.grid(row=1, column=0, padx=10, pady=10)
+                hrFrame.plot.grid(row=0, column=0, padx=10, pady=10)
 
             return
 
@@ -60,8 +60,6 @@ class main_analyze():
 
         mapFrame = framedArea(main, lcarsSettings.blue)
         mapFrame.grid(column=0, row=1, padx=10, pady=10, sticky="nsew")
-        mapFrame.textField = customtkinter.CTkLabel(mapFrame, text="Map",  text_color=lcarsSettings.yellow, justify="left")
-        mapFrame.textField.grid(column=0, row=0, padx=10, pady=10)
 
         hrFrame = framedArea(main, lcarsSettings.blue)
         hrFrame.grid(column=1, row=1, padx=10, pady=10, sticky="nsew")
@@ -73,5 +71,5 @@ class main_analyze():
 
         main.mainloop()
 
-mydb = mysqltools.connect()
-nm = main_analyze(mydb)
+#mydb = mysqltools.connect()
+#nm = main_analyze(mydb)

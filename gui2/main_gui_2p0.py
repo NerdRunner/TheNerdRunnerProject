@@ -56,30 +56,12 @@ btn3.grid(row=4, column=0)
 guiFunctions.createUpperPlots(upperFrame, mydb)
 
 ### Lower Frame ###
-#guiFunctions.createLowerPlots(lowerFrame, mydb, currcw)
+#guiFunctions.createLowerPlots(lowerFrame, mydb, currcw) #TODO: hier rauskommentieren
 
 ### Right Frame ###
 rightFrame = framedArea(main, lcarsSettings.yellow, bar=False)
 rightFrame.grid(column=2, row=0, rowspan=2, sticky="nsew", padx=pad, pady=pad)
 guiFunctions.createRightFrame(rightFrame, mydb)
-
-
-#textFieldRight = customtkinter.CTkLabel(rightFrame, text="Summary", text_color=lcarsSettings.yellow, justify="left")
-#textFieldRight.grid(column=0, row=0, padx=pad, pady=pad)
-#actList = upperFrame.actBoxes.get()
-#curry = datetime.date.today().year
-#sum, formattedString = activityMetrics.summaryYearly(mydb,actList , [curry, curry-1, curry-2])
-#textFieldRight.configure(text=formattedString)
-
-#textFieldRight2 = customtkinter.CTkLabel(rightFrame, text="Summary", text_color=lcarsSettings.yellow, justify="left")
-#textFieldRight2.grid(column=1, row=0, padx=pad, pady=pad, sticky="nw")
-#formattedString2 = ""
-#for a in actList:
-#    formattedString2+=a+"\n\n"
-#    ss = activityMetrics.summary(mydb, a, datetime.date(1900,1,1), datetime.date(2100,1,1))
-#    formattedString2+=str(ss)+"\n-------------\n"
-    #print
-#textFieldRight2.configure(text=formattedString2)
 
 
 

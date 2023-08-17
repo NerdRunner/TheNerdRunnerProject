@@ -18,6 +18,9 @@ customtkinter
 osmnx
 
 Versions:
+### 0.7:
+Display heart rate zones as background colors
+Changed Map view to xy-Plot
 ### 0.6:
 mysqltools.getLastActivities: Possibility to get all activities using an asterisk ["*"]
 plotUtils.plotActivityMap: Plots the course of an activity

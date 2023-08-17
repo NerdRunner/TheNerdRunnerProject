@@ -6,7 +6,7 @@ def getPointListfromActivity(mydb, run, typ="pointlist"):
     '''
     Gets lat/lon coordinates of an activity identified by its filename
     :param mydb: MYSQL-Handler
-    :param run: filname of activity
+    :param run: filename of activity
     :param typ: String, either "pointlist" or "hr": Type of what shall be given back
     :return:
     '''
