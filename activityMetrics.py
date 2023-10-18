@@ -91,18 +91,17 @@ def summary(mydb, act, d1, d2):
     '''
     rv=[]
     #Get the activities
-    res = mysqltools.getActivitiesByDateRange(mydb, act, d1, d2)
+    res = mysqltools.getActivitiesByDateRange(mydb, [act], d1, d2)
     dist = 0
     meanHR = 0
     totalTrimp = 0
-    for ll in res:
-        dist = dist+ll[4]
-        meanHR = meanHR + ll[5]
-        totalTrimp = totalTrimp+ll[7]
-
-    if len(res)>0:
-        meanHR = meanHR/len(res)
-    dist = dist/1000
+    if len(res) > 0:
+        for ll in res:
+            dist = dist+ll[4]
+            meanHR = meanHR + ll[5]
+            totalTrimp = totalTrimp+ll[7]
+            meanHR = meanHR/len(res)
+        dist = dist/1000
 
     dist = "{:4.2f}".format(dist)
     meanHR = "{:4.2f}".format(meanHR)

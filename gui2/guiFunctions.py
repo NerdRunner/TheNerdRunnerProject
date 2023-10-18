@@ -43,9 +43,10 @@ def createLowerPlots(app, mydb, currcw):
     app.fig, app.ax = plotUtils.totalperWeekPlot(mysqltools.connect(), mysqlCredentials.cn_trimp, 2023, currcw - 10,
                                                  currcw)
     app.fig2, app.ax2 = plotUtils.PMC(mydb, datetime.datetime.today(), 100)
+
     plotUtils.setAxisColor(app.ax, lcarsSettings.yellow)
     plotUtils.setAxisColor(app.ax2, lcarsSettings.yellow)
-    app.fig2, app.ax2 = plotUtils.PMC(mydb, datetime.datetime.today(), 100)
+
     plotUtils.setAxisColor(app.ax, lcarsSettings.yellow)
     plotUtils.setAxisColor(app.ax2, lcarsSettings.yellow)
 
@@ -73,7 +74,7 @@ def createRightFrame(main, mydb):
     textFieldRight2.grid(column=0, row=1, padx=10, pady=10, sticky="nw")
     delta = 0
     sum=[]
-    actType = "running"
+    actType = mysqltools.getSetting(mydb, "preferredActType")[2]
     while delta<10:
         d1 = today - datetime.timedelta(days=31*delta)
         d2 = calendar.monthrange(d1.year, d1.month)

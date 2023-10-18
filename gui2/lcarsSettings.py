@@ -1,4 +1,5 @@
 yellow = "#ffaa00"
+yellowRGB = (255, 170, 0)
 blue = "#7788ff"
 magenta = "#cc4499"
 red = "#ff2200"

@@ -3,6 +3,7 @@ from datetime import datetime
 from datetime import timedelta
 
 import matplotlib.patches as patches
+import numpy as np
 import osmnx as ox
 from matplotlib.dates import DateFormatter
 from matplotlib.figure import Figure
@@ -153,6 +154,32 @@ def plotLatLong(mydb, act):
     #ax.legend(facecolor="black", labelcolor='linecolor', frameon=False)
     return fig, ax
 
+def plotXY(data, legend=" "):
+    '''
+    Plots an XY plot of data
+    :param data: [ [[x1, y1], [x2, y2], ..] , [[x1, y1], [x2, y2], ..] ]
+    :param legend: Legend
+    :return:
+    '''
+    xlist = []
+    ylist = []
+    for einzel in data:
+        yListEinzel = []
+        xListEinzel = []
+        for d in einzel:
+            yListEinzel.append(d[1])
+            xListEinzel.append(d[0])
+        ylist.append(yListEinzel)
+        xlist.append(xListEinzel)
+    fig = Figure(figsize=(5,2), dpi=100)
+    ax = fig.add_subplot()
+    xlist = np.array(xlist).T
+    ylist = np.array(ylist).T
+    ax.plot(xlist, ylist, label=legend)
+    ax.set_facecolor("black")
+    fig.set_facecolor("black")
+    ax.legend(facecolor="black", labelcolor='linecolor', frameon=False, loc="upper left")
+    return fig, ax
 def plotActivityMap(mydb, act):
     xlist, ylist, pointlist = getPointListfromActivity(mydb, act)
     # change to latitude, longitude order
@@ -215,7 +242,7 @@ def addHRZonebanner(mydb, ax, dt):
     maxHR = sm.getVitalValues(mydb, dto)[2]
     hRZones = str.split(mysqltools.getSetting(mydb, "hrZones")[2], ",")
     hRZones = [float(i) for i in hRZones]
-    #TODO: LCARS - Farben verwenden
+
     ax.axhspan(hRZones[0]*maxHR, hRZones[1]*maxHR, facecolor=lcarsSettings.ice, alpha=0.5, zorder=-100)
     ax.axhspan(hRZones[1]*maxHR, hRZones[2]*maxHR, facecolor=lcarsSettings.green, alpha=0.5, zorder=-100)
     ax.axhspan(hRZones[2] * maxHR, hRZones[3] * maxHR, facecolor=lcarsSettings.yellow, alpha=0.5, zorder=-100)

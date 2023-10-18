@@ -22,13 +22,17 @@ def getDateRangeFromWeek(year, week):
     d2 = d1 + datetime.timedelta(days=6.9)
     return d1, d2
 
-def dayOfYear(d):
+def dayOfYear(d, type="dt"):
     '''
     returns the day of the year of a given date
     :param d: The date
+    :type = "dt" -> Input is datetime; "d" -> input is a date
     :return:
     '''
-    doy = d.date().timetuple().tm_yday
+    if(type=="dt"):
+        doy = d.date().timetuple().tm_yday
+    else:
+        doy = d.timetuple().tm_day
     return doy
 
 def listSum(ll):
@@ -39,3 +43,19 @@ def listSum(ll):
         else:
             rv = rv+ l
     return rv
+
+def changeColorOfImage(img, newValue):
+    '''
+    Changes the color of pixels where R+G+B > 200 to a new value
+    :param img: img - Object read with PhotoImage
+    :param newValue: (R,G,B)
+    :return: img - Object
+    '''
+    width, height = img.width(), img.height()
+    # Process every pixel
+    for x in range(0, width - 1):
+        for y in range(0, height - 1):
+            current_color = img.get(x, y)
+            if (current_color[0] + current_color[1] + current_color[2]) > 200: #Condition where to change the color. 200 is more or less self chosen
+                img.put("#%02x%02x%02x" % newValue, (x, y))
+    return img

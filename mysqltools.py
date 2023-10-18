@@ -2,7 +2,10 @@ import datetime
 import os
 from datetime import timedelta
 
+
 import mysql.connector
+
+import Utils
 import mysqlCredentials
 import mysqltools
 
@@ -149,19 +152,38 @@ def getLastActivities(mydb, activityType, lastN):
     myresult = mycursor.fetchall()
     return myresult
 
-def getActivitiesAndNumber(mydb):
+def getActivitiesAndNumber(mydb, justNames=False):
     '''
-    gets all Activitytypes in the database and how often they are in the database
+    gets all Activitytypes in the database and how often they are in the database.
+    gives just the names with argument justNames = True
     :param mydb:
     :return: list [(act1, num1), (act2, num2), ...]
     '''
     cursor = mydb.cursor()
-    sql = "SELECT typ, count(typ) FROM "+ mysqlCredentials.activitytable +" group by typ ORDER BY typ ASC"
+    if justNames:
+        sql = "SELECT typ FROM " + mysqlCredentials.activitytable + " group by typ ORDER BY typ ASC"
+    else:
+        sql = "SELECT typ, count(typ) FROM "+ mysqlCredentials.activitytable +" group by typ ORDER BY typ ASC"
     cursor.execute(sql)
     myresult = cursor.fetchall()
     rv=[]
     for l in myresult:
         rv.append(l)
+    return rv
+
+def getYears(mydb):
+    '''
+    gets all the years for which activities are stored in the database
+    :param mydb:
+    :return: list [year1, year2, year3, ....]
+    '''
+    cursor = mydb.cursor()
+    sql = "SELECT year(datum) FROM "+ mysqlCredentials.activitytable +" group by year(datum) ORDER BY year(datum) ASC"
+    cursor.execute(sql)
+    myresult = cursor.fetchall()
+    rv=[]
+    for l in myresult:
+        rv.append(l[0])
     return rv
 
 def getByDateRange(mydb, col, d1, d2):
@@ -184,14 +206,23 @@ def getActivitiesByDateRange(mydb, act, d1, d2):
     '''
     Gets all activities for a given date range
     :param mydb: MYSQL-Handler
-    :param act: Activity-Type
+    :param act: Activity-Type --> list
     :param d1: first date
     :param d2: second date
     :return:
     '''
     mycursor = mydb.cursor()
-    sql = "SELECT * from " + mysqlCredentials.activitytable + " WHERE typ = '"+act+"' and DATE(datum) >= '" + d1.strftime(
-        "%Y-%m-%d") + "' and DATE(datum) <= '" + d2.strftime("%Y-%m-%d") + "' ORDER by datum DESC"
+    actStr = act
+    if len(act)>0:
+        actStr = ""
+        for a in act:
+            actStr+="typ='"+a +"' OR "
+        actStr=actStr[:-4]
+    sql = "SELECT * from " + mysqlCredentials.activitytable + " WHERE ("+actStr+") and (DATE(datum) >= '" + d1.strftime(
+        "%Y-%m-%d") + "' and DATE(datum) <= '" + d2.strftime("%Y-%m-%d") + "') ORDER by datum DESC"
+    #sql = "SELECT CAST(datum as DATE), typ, " + mysqlCredentials.cn_distance + " from " + mysqlCredentials.activitytable + " WHERE (" + actStr + ") and (DATE(datum) >= '" + d1.strftime(
+    #    "%Y-%m-%d") + "' and DATE(datum) <= '" + d2.strftime("%Y-%m-%d") + "') ORDER by datum DESC"
+
 
     mycursor.execute(sql)
     myresult = mycursor.fetchall()
@@ -200,3 +231,41 @@ def getActivitiesByDateRange(mydb, act, d1, d2):
 def getFitFiles(mydb):
     comm = mysqltools.getSetting(mydb, "importScript")
     os.system(comm[2])
+
+def getCummulativeDistancesPerYear(mydb, year, actList):
+    '''
+    gets the cummulative distance for a given year for a list of activities
+    :param mydb:
+    :param year:
+    :param actList:
+    :return:
+    '''
+    ay = mysqltools.getActivitiesByDateRange(mydb, actList, datetime.date(year,1,1), datetime.date(year, 12,31))
+    cum = []
+    i = 0
+    while(i<=366): #empty array for day of year and value
+        cum.append([i,0])
+        i=i+1
+    for a in ay: #fill array
+        #dt = datetime.datetime.combine(a[0], datetime.time())
+        dt = a[2]
+        doy = Utils.dayOfYear(dt)
+        cum[doy][1] = cum[doy][1]+a[4]/1000
+    i = 1
+    while(i<len(cum)): #cummulate values
+        cum[i][1] += cum[i-1][1]
+        i+=1
+    return cum
+
+def getCummulativeDistances(mydb, yearList, actList):
+    cumGes = []
+    for y in yearList:
+        cum = getCummulativeDistancesPerYear(mydb, y, actList)
+        cumGes.append(cum)
+    return cumGes
+
+#mydb = mysqltools.connect()
+#cumm = getCummulativeDistancesPerYear(mydb, 2023, ["cycling", "running"])
+#cumGes = getCummulativeDistances(mydb, [2021, 2022, 2023], ["cycling", "running"])
+#print("ende")
+#print(cumm)

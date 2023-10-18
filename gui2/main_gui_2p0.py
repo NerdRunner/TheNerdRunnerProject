@@ -8,6 +8,7 @@ import importUtils
 import mysqltools
 
 from framedArea import framedArea
+from gui2.main_globalanalyze import main_globalanalyze
 from lcarsButton import lcarsButton
 from main_analyze import main_analyze
 from framedBoxes import framedBoxes
@@ -51,6 +52,9 @@ btn2.grid(row=2, column=0)
 
 btn3 = lcarsButton(buttonFrame, "Analyze", lcarsSettings.magenta, command=lambda: main_analyze(mydb))
 btn3.grid(row=4, column=0)
+
+btn4 = lcarsButton(buttonFrame, "Global analysis", lcarsSettings.magenta, command=lambda: main_globalanalyze(mydb))
+btn4.grid(row=5, column=0)
 
 ### Upper Frame ###
 guiFunctions.createUpperPlots(upperFrame, mydb)
