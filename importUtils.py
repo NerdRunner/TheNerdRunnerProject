@@ -4,8 +4,12 @@ import os
 from fitparse import FitFile
 
 import mysqlCredentials
+import mysqltools
 from Activity import Activity
 from Trackpoint import Trackpoint
+
+import gpxpy
+from tcxreader.tcxreader import TCXReader, TCXTrackPoint
 
 
 def FitFileToTPList(f)->Trackpoint:
@@ -87,20 +91,15 @@ def addFitFilesToDBWithStatus(mydb, path, app, rv):
     rv.configure(text="Adding "+str(nFiles) +" Activities")
     app.update()
     for ff in dir_list:
-        #if ff.endswith('.fit'):
             imp = FitFileToTPList(path + ff)
             act = Activity(imp, ff, mydb)
             act.filename = ff
             act.addActivitytoDatabse(mydb)
-            ps = act.print_short()
             percentage = i/nFiles*100.0
             percentage = "{:4.2f}".format(percentage)
             rv.configure(text=str(percentage) + " % done" )
             app.update()
-            #print("Done: "+str(i/nFiles*100.0) + " % - Added: "+ps)
             i = i + 1
-        #else:
-         #   print("Skipping: "+ff)
     return
 
 
@@ -122,3 +121,89 @@ def checkForMissingEntries(mydb, ff):
 
     delta = set(ff) - set(srList) #difference between list in mysql database and files in folder
     return delta
+
+def GPXFileToActivity(mydb, path):
+    dir_list = []
+    dir_list += [each for each in os.listdir(path) if each.endswith('.gpx') and each.startswith('Move')]
+    dir_list = checkForMissingEntries(mydb, dir_list)
+    i = 0
+    nFiles = len(dir_list)
+    for ff in dir_list:
+    #if os.path.isfile(f) and f.endswith('gpx'):
+        gpx_file = open(path+ff)
+        gpx = gpxpy.parse(gpx_file)
+        tpl = []
+        strecke = gpx.length_3d()
+        for track in gpx.tracks:
+            for segment in track.segments:
+                for point in segment.points:
+                    tp = Trackpoint()
+                    tp.timestamp = point.time
+                    tp.lat = point.latitude
+                    tp.lon = point.longitude
+                    tp.distance = strecke
+                    typ = point.type
+                    if typ == None:
+                        typ = 'running'
+
+                    tp.typ = typ
+                    hr = '0'
+                    try:
+                        hr = point.extensions[0][1].text
+                    except:
+                        hr = '0'
+                    tp.hr = float(hr)
+                    tp.speed = point.speed
+
+                    tpl.append(tp)
+               # tp.hr = point.
+                #print(f'Point at ({point.latitude},{point.longitude}) -> {point.time}')
+                #print(hr)
+        if len(tpl) > 0:
+            act = Activity(tpl, ff, mydb)
+
+            act.filename = ff
+            act.addActivitytoDatabse(mydb)
+            ps = act.print_short()
+            print(ps)
+        else:
+            print("Not imported: " + ff)
+
+
+    return
+
+def TCXFileToWorkout(mydb, path):
+    dir_list = []
+    dir_list += [each for each in os.listdir(path) if each.endswith('.tcx') or each.endswith('.tcx2')]
+    dir_list = checkForMissingEntries(mydb, dir_list)
+    i = 0
+    nFiles = len(dir_list)
+    for ff in dir_list:
+        #if os.path.isfile(ff) and (ff.endswith('.tcx') or ff.endswith('.tcx2')):
+            reader = TCXReader()
+            data = reader.read(path+ff)
+            tpl = []
+            for singleTP in data.trackpoints:
+                tp = Trackpoint()
+                tp.lat = singleTP.latitude
+                tp.lon = singleTP.longitude
+                tp.distance = singleTP.distance
+                tp.hr = singleTP.hr_value
+                tp.timestamp = singleTP.time
+                tp.typ = data.activity_type.lower()
+                tpl.append(tp)
+            if len(tpl)>0:
+                act = Activity(tpl, ff, mydb)
+
+                act.filename = ff
+                act.addActivitytoDatabse(mydb)
+                ps = act.print_short()
+                print(ps)
+            else:
+                print("Not imported: "+ff)
+    return
+
+#mydb = mysqltools.connect()
+#TCXFileToWorkout(mydb, "/home/simon/Nextcloud/clientsync/Dokumente/laufen/garmin/")
+#GPXFileToActivity(mydb, "/home/simon/Nextcloud/clientsync/Dokumente/laufen/garmin/")
+#print("Import")

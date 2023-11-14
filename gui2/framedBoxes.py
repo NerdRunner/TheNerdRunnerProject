@@ -1,6 +1,7 @@
 import math
 
 import customtkinter
+import guiFunctions
 
 import mysqltools
 

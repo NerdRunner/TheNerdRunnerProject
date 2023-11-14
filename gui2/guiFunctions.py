@@ -29,20 +29,32 @@ def gui_getFitFiles(app, mydb, label):
     label.configure(text="Importing done.")
 
 
-def createUpperPlots(main, mydb):
+def createUpperPlots(main, mydb, preserveSettings=False):
     upperTable = framedTable(main, "titel2", ('Date', 'Type', 'Distance', 'Mean HR', 'Trimp'), lcarsSettings.blue)
     lastAct = mysqltools.getLastActivities(mydb, ["*"], 10)
     upperTable.insertMySQLTableValues(lastAct)
     upperTable.grid(column=1, row=1, padx=10, pady=10)
-
+    if preserveSettings:
+        sel = main.actBoxes.get()
     actList = mysqltools.getActivitiesAndNumber(mydb)
-    main.actBoxes = framedBoxes(main, "titel", actList, lcarsSettings.blue, upperTable)
+
+    if preserveSettings:
+        main.actBoxes = framedBoxes(main, "titel", actList, lcarsSettings.blue, upperTable, autocheck=False)
+        tl = []
+        for s in sel:
+            tl.append([s, True])
+        main.actBoxes.set(tl)
+    else:
+        main.actBoxes = framedBoxes(main, "titel", actList, lcarsSettings.blue, upperTable, autocheck=False)
+        prefAct = mysqltools.getSetting(mydb, "preferredActType")[2]
+        main.actBoxes.set([[prefAct, True]])
     main.actBoxes.grid(column=0, row=1, padx=10, pady=10)
 
-def createLowerPlots(app, mydb, currcw):
+def createLowerPlots(app, mydb, currcw, actList):
     app.fig, app.ax = plotUtils.totalperWeekPlot(mysqltools.connect(), mysqlCredentials.cn_trimp, 2023, currcw - 10,
-                                                 currcw)
-    app.fig2, app.ax2 = plotUtils.PMC(mydb, datetime.datetime.today(), 100)
+                                                 currcw, actList)
+
+    app.fig2, app.ax2 = plotUtils.PMC(mydb, datetime.datetime.today(), 100, actList)
 
     plotUtils.setAxisColor(app.ax, lcarsSettings.yellow)
     plotUtils.setAxisColor(app.ax2, lcarsSettings.yellow)
@@ -54,14 +66,15 @@ def createLowerPlots(app, mydb, currcw):
     app.plot.grid(row=1, column=0, padx=10, pady=20, sticky="nsw")
 
 
-def createRightFrame(main, mydb):
+def createRightFrame(main, mydb, actList):
     subFrame = customtkinter.CTkFrame(main, fg_color="black")
     subFrame.grid(column=0, row=1, padx=10, pady=10)
     textFieldRight = customtkinter.CTkLabel(subFrame, text="Summary", text_color=lcarsSettings.yellow, justify="left")
     textFieldRight.grid(column=0, row=0, padx=10, pady=10, sticky="nw")
     today = datetime.datetime.today()
-    currCTL = activityMetrics.calculateDayCTL(mydb, today)
-    currATL = activityMetrics.calculateDayATL(mydb, today)
+    #actList = ["running"]
+    currCTL = activityMetrics.calculateDayCTL(mydb, today, actList)
+    currATL = activityMetrics.calculateDayATL(mydb, today, actList)
     sum = "Current stats:\n\n"
     sum += "CTL: " + "{:4.2f}".format(currCTL) + "\n"
     sum += "ATL: " + "{:4.2f}".format(currATL) + "\n"
@@ -75,12 +88,13 @@ def createRightFrame(main, mydb):
     delta = 0
     sum=[]
     actType = mysqltools.getSetting(mydb, "preferredActType")[2]
+
     while delta<10:
         d1 = today - datetime.timedelta(days=31*delta)
         d2 = calendar.monthrange(d1.year, d1.month)
         startdate = datetime.date(d1.year, d1.month, 1)
         enddate = datetime.datetime(d1.year, d1.month, d2[1])
-        cm = activityMetrics.summary(mydb, actType, startdate ,enddate)
+        cm = activityMetrics.summary(mydb, actList, startdate ,enddate)
         cm.insert(0,d1.month)
         cm.insert(0,d1.year)
         sum.append(cm)

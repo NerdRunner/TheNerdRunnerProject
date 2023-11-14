@@ -8,23 +8,25 @@ import Utils
 import mysqlCredentials
 import mysqltools
 
-def averageDailyTrimps(mydb, d1, nDays):
+def averageDailyTrimps(mydb, d1, nDays, actList,wl=[]):
     '''
     Calculates the average of summed and weighted daily trimp values starting from a given date. Weights exponentially for delta to start date
     :param mydb: MYSQL-Handler
     :param d1: Start date
     :param nDays: number of days to go back to average the trimp values
+    :param wl (weight list; weight for each day). Has to be the same lenght as number of days
     :return:
     '''
     n=0
     trimps = []
-    wl = []
+
     while(n<nDays):
         d = d1 - timedelta(days=n)
-        res = mysqltools.getByDateRange(mydb, mysqlCredentials.cn_trimp, d, d)
+        res = mysqltools.getByDateRange(mydb, mysqlCredentials.cn_trimp, actList,d, d)
         trimpsDaily=0
-        weight = math.exp(-3 * n / nDays)
-        wl.append(weight)
+        if len(wl)!= nDays:
+            weight = math.exp(-3 * n / nDays)
+            wl.append(weight)
         for d in res:
             t = d[1]
             trimpsDaily = trimpsDaily+t
@@ -33,43 +35,20 @@ def averageDailyTrimps(mydb, d1, nDays):
     travg = np.average(trimps, weights=wl)
     return travg
 
-def averageTrimps(mydb, d1, nDays):
-    '''
-    gets weighted averaged trimp values over the last nDays starting from d1
-    :param mydb: MYSQL-Handler
-    :param d1: Start date
-    :param nDays: Number of days back from d1
-    :return:
-    '''
-    d2 = d1 - timedelta(days=nDays)
-    res = mysqltools.getByDateRange(mydb,mysqlCredentials.cn_trimp, d1, d2)
-    i = 0.
-    trimps = []
-    for d in res:
-        t = d[1]
-        delta = (d1-d[0]).days
-        weight = math.exp(-3*delta/nDays)
-        trimps.append(t*weight)
-        i = i+1
-    if len(trimps) < nDays:
-        while len(trimps) < nDays:
-            trimps.append(0.)
-    travg = np.average(trimps)
 
-    return travg
-
-def calculateDayCTL(mydb, d1):
+def calculateDayCTL(mydb, d1, actList, wl=[]):
     '''
     calculates the CTL (Cronic Training Load) for a given date
     :param mydb: MYSQL-Handler
     :param d1: Day for which the CTL is calculated
+    :param wl: weightlist for weight the trimps. wl[0] = startdate weight ... typically 1
     :return:
     '''
     #ctl = averageTrimps(mydb, d1, 42)
-    ctl = averageDailyTrimps(mydb, d1, 42)
+    ctl = averageDailyTrimps(mydb, d1, 42, actList, wl)
     return ctl
 
-def calculateDayATL(mydb, d1):
+def calculateDayATL(mydb, d1, actList):
     '''
     Calculates the ATL (Acute Training Load) for a given date
     :param mydb: MYSQL-Handler
@@ -77,7 +56,7 @@ def calculateDayATL(mydb, d1):
     :return:
     '''
     #atl = averageTrimps(mydb, d1, 7)
-    atl = averageDailyTrimps(mydb, d1, 7)
+    atl = averageDailyTrimps(mydb, d1, 7, actList, [1,0.8,0.7,0.6,0.4,0.2,0.1])
     return atl
 
 def summary(mydb, act, d1, d2):
@@ -91,7 +70,7 @@ def summary(mydb, act, d1, d2):
     '''
     rv=[]
     #Get the activities
-    res = mysqltools.getActivitiesByDateRange(mydb, [act], d1, d2)
+    res = mysqltools.getActivitiesByDateRange(mydb, act, d1, d2)
     dist = 0
     meanHR = 0
     totalTrimp = 0
@@ -125,7 +104,7 @@ def summaryYearly(mydb, act, yyyy):
         for y in yyyy:
             d1 = datetime.date(y, 1, 1)
             d2 = datetime.date(y, 12, 31)
-            yy = summary(mydb, a, d1, d2)
+            yy = summary(mydb, [a], d1, d2)
             yy.insert(0,y)
             summ.append(yy)
             formattedString+=str(yy)+"\n"

@@ -18,6 +18,10 @@ customtkinter
 osmnx
 
 Versions:
+### 0.81
+Global analysis: Histogram, Tilechart, Cumulated values
+### 0.8
+added global analysis
 ### 0.7:
 Display heart rate zones as background colors
 Changed Map view to xy-Plot

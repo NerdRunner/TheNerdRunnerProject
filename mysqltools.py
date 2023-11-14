@@ -131,6 +131,18 @@ def linestringtoList(ls):
         rv.append(tp)
     return rv
 
+def makeORListfromActlist(actList):
+    '''
+    Generates a "OR" - String for MYSQL requests
+    :param actList: List of activities as Strings: ["running", "cycling"]
+    :return:
+    '''
+    rvList = ""
+    for a in actList:
+        rvList = rvList + " typ = '" + a + "' OR "
+    rvList = rvList[:-4]
+    return rvList
+
 def getLastActivities(mydb, activityType, lastN):
     '''
     Gets the lastN activities of a given type
@@ -140,10 +152,7 @@ def getLastActivities(mydb, activityType, lastN):
     :return:
     '''
     mycursor = mydb.cursor()
-    actlist = ""
-    for a in activityType:
-        actlist = actlist+" typ = '" + a + "' OR "
-    actlist = actlist[:-4]
+    actlist = makeORListfromActlist(activityType)
     sql = "SELECT * from " + mysqlCredentials.activitytable + " WHERE " + actlist + " ORDER by datum DESC LIMIT " + str(
         lastN) + ""
     if activityType[0] == "*":
@@ -186,23 +195,25 @@ def getYears(mydb):
         rv.append(l[0])
     return rv
 
-def getByDateRange(mydb, col, d1, d2):
+def getByDateRange(mydb, col, actList, d1, d2):
     '''
     Gets the col-Values which are between a specific date range
     :param mydb: MYSQL-Handler
     :param col: name of column. See mysqlcredential.cn_XXX
+    :param actList: List of Strings which activities shall be searched.
     :param d1: first date
     :param d2: second date
     :return: (date, col)
     '''
     mycursor = mydb.cursor()
+    actreq = makeORListfromActlist(actList)
     sql = "SELECT datum," + col + " from " + mysqlCredentials.activitytable + " WHERE DATE(datum) <= '" + d1.strftime(
-        "%Y-%m-%d") + "' and DATE(datum) >= '" + d2.strftime("%Y-%m-%d") + "' ORDER by datum DESC"
+        "%Y-%m-%d") + "' and DATE(datum) >= '" + d2.strftime("%Y-%m-%d") + "' and ("+actreq + " ) ORDER by datum DESC"
     mycursor.execute(sql)
     myresult = mycursor.fetchall()
     return myresult
 
-def getActivitiesByDateRange(mydb, act, d1, d2):
+def getActivitiesByDateRange(mydb, act, d1, d2, filter=[]):
     '''
     Gets all activities for a given date range
     :param mydb: MYSQL-Handler
@@ -218,7 +229,11 @@ def getActivitiesByDateRange(mydb, act, d1, d2):
         for a in act:
             actStr+="typ='"+a +"' OR "
         actStr=actStr[:-4]
-    sql = "SELECT * from " + mysqlCredentials.activitytable + " WHERE ("+actStr+") and (DATE(datum) >= '" + d1.strftime(
+    if len(filter)>0:
+        sql = "SELECT * from " + mysqlCredentials.activitytable + " WHERE ("+actStr+") and (DATE(datum) >= '" + d1.strftime(
+        "%Y-%m-%d") + "' and DATE(datum) <= '" + d2.strftime("%Y-%m-%d") + "') AND ("+filter[0]+ " >"+str(filter[1])+ " AND "+filter[0]+" <"+str(filter[2])+") ORDER by datum DESC"
+    else:
+        sql = "SELECT * from " + mysqlCredentials.activitytable + " WHERE ("+actStr+") and (DATE(datum) >= '" + d1.strftime(
         "%Y-%m-%d") + "' and DATE(datum) <= '" + d2.strftime("%Y-%m-%d") + "') ORDER by datum DESC"
     #sql = "SELECT CAST(datum as DATE), typ, " + mysqlCredentials.cn_distance + " from " + mysqlCredentials.activitytable + " WHERE (" + actStr + ") and (DATE(datum) >= '" + d1.strftime(
     #    "%Y-%m-%d") + "' and DATE(datum) <= '" + d2.strftime("%Y-%m-%d") + "') ORDER by datum DESC"
@@ -232,12 +247,13 @@ def getFitFiles(mydb):
     comm = mysqltools.getSetting(mydb, "importScript")
     os.system(comm[2])
 
-def getCummulativeDistancesPerYear(mydb, year, actList):
+def getCummulativeValuesPerYear(mydb, year, actList, datatype, cummulate=True):
     '''
-    gets the cummulative distance for a given year for a list of activities
+    gets the cummulative distance for a given year for a list of activities and datatype
     :param mydb:
-    :param year:
-    :param actList:
+    :param year: the year to get data from
+    :param actList: list of activity types which shall be cummulated
+    :param datatype: type of data which shall be cummulated. Currently supported "Distance" or "Trimp"
     :return:
     '''
     ay = mysqltools.getActivitiesByDateRange(mydb, actList, datetime.date(year,1,1), datetime.date(year, 12,31))
@@ -247,20 +263,28 @@ def getCummulativeDistancesPerYear(mydb, year, actList):
         cum.append([i,0])
         i=i+1
     for a in ay: #fill array
-        #dt = datetime.datetime.combine(a[0], datetime.time())
         dt = a[2]
         doy = Utils.dayOfYear(dt)
-        cum[doy][1] = cum[doy][1]+a[4]/1000
-    i = 1
-    while(i<len(cum)): #cummulate values
-        cum[i][1] += cum[i-1][1]
-        i+=1
+        column = mysqlCredentials.cn_distance_value #Default is nothing checked
+        scale = 1000
+        if datatype=="Distance":
+            column = mysqlCredentials.cn_distance_value
+            scale = 1000
+        elif datatype=="Trimp":
+            column = mysqlCredentials.cn_trimp_value
+            scale = 1
+        cum[doy][1] = cum[doy][1]+a[column]/scale
+    if(cummulate):
+        i = 1
+        while(i<len(cum)): #cummulate values
+            cum[i][1] += cum[i-1][1]
+            i+=1
     return cum
 
-def getCummulativeDistances(mydb, yearList, actList):
+def getCummulativeValues(mydb, yearList, actList, datatype, cummulate=True):
     cumGes = []
     for y in yearList:
-        cum = getCummulativeDistancesPerYear(mydb, y, actList)
+        cum = getCummulativeValuesPerYear(mydb, y, actList, datatype, cummulate=cummulate)
         cumGes.append(cum)
     return cumGes
 

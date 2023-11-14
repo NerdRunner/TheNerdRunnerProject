@@ -16,6 +16,8 @@ from framedTable import framedTable
 import lcarsSettings
 import guiFunctions
 
+import cProfile
+
 mydb = mysqltools.connect()
 path = mysqltools.getSetting(mydb, "fitFilePath")[2]
 today=datetime.datetime.today()
@@ -65,18 +67,20 @@ guiFunctions.createUpperPlots(upperFrame, mydb)
 ### Right Frame ###
 rightFrame = framedArea(main, lcarsSettings.yellow, bar=False)
 rightFrame.grid(column=2, row=0, rowspan=2, sticky="nsew", padx=pad, pady=pad)
-guiFunctions.createRightFrame(rightFrame, mydb)
+guiFunctions.createRightFrame(rightFrame, mydb, upperFrame.actBoxes.get())
 
 
 
 
 def readFitFilesAndUpdatePlots(mydb, path, rv):
     importUtils.addFitFilesToDBWithStatus(mydb, path, buttonFrame, rv)
+    actList = upperFrame.actBoxes.get()
     rv.configure(text="Updating plots ...")
     main.update()
-    guiFunctions.createUpperPlots(upperFrame, mydb)
-    guiFunctions.createLowerPlots(lowerFrame, mydb, currcw)
-    guiFunctions.createRightFrame(rightFrame, mydb)
+    guiFunctions.createUpperPlots(upperFrame, mydb, preserveSettings=True)
+
+    guiFunctions.createLowerPlots(lowerFrame, mydb, currcw, actList)
+    guiFunctions.createRightFrame(rightFrame, mydb, actList)
     rv.configure(text=" ")
 
 main.mainloop()

@@ -1,10 +1,13 @@
 import datetime
+import math
 from datetime import datetime
 from datetime import timedelta
 
+import matplotlib
 import matplotlib.patches as patches
 import numpy as np
 import osmnx as ox
+from matplotlib import pyplot as plt
 from matplotlib.dates import DateFormatter
 from matplotlib.figure import Figure
 from matplotlib.path import Path
@@ -19,7 +22,7 @@ from Sportsman import Sportsman
 from gui2 import lcarsSettings
 
 
-def totalperWeekPlot(mydb, columnName, year, cw_start, cw_end):
+def totalperWeekPlot(mydb, columnName, year, cw_start, cw_end, actList):
     '''
     Plots the total values of columnName over given calendar weeks for all acitivities
     :param mydb: MySQL-Handler
@@ -27,6 +30,7 @@ def totalperWeekPlot(mydb, columnName, year, cw_start, cw_end):
     :param year: The year
     :param cw_start: Plotrange starting calendar week
     :param cw_end: Plotrange ending calendar week
+    :param actList: List of Activities as String-List
     :return: figure object
     '''
     mycursor = mydb.cursor()
@@ -34,9 +38,10 @@ def totalperWeekPlot(mydb, columnName, year, cw_start, cw_end):
     xval = []
     yval = []
     xticks = []
+    al = mysqltools.makeORListfromActlist(actList)
     while d <= cw_end:
         d1, d2 = Utils.getDateRangeFromWeek(year,d)
-        sql = "SELECT "+columnName+" from " + mysqlCredentials.activitytable + " WHERE DATE(datum) >= '" + d1.strftime("%Y-%m-%d") + "' and DATE(datum) <= '" + d2.strftime("%Y-%m-%d")+"'"
+        sql = "SELECT "+columnName+" from " + mysqlCredentials.activitytable + " WHERE DATE(datum) >= '" + d1.strftime("%Y-%m-%d") + "' and DATE(datum) <= '" + d2.strftime("%Y-%m-%d")+"' and ("+al+")" #todo: hier weitermachen
         mycursor.execute(sql)
         myresult = mycursor.fetchall()
         xval.append(d)
@@ -98,7 +103,7 @@ def totalperWeekAndActivityPlot(mydb, columnName, actList, year, cw_start, cw_en
 
     return fig, ax
 
-def PMC(mydb, d1, nDays):
+def PMC(mydb, d1, nDays, actList):
     xval = []
     yvalCTL = []
     yvalATL = []
@@ -107,11 +112,17 @@ def PMC(mydb, d1, nDays):
     myFmt = DateFormatter("%d.%m.")
     d = d1
     n=0
+    wl=[]
+    k = 0
+    while(k<42):
+        weight = math.exp(-3 * k / 42)
+        wl.append(weight)
+        k+=1
     while n<=nDays:
         xval.append(d)
         xticks.append(d)
-        ctl = activityMetrics.calculateDayCTL(mydb, d)
-        atl = activityMetrics.calculateDayATL(mydb, d)
+        ctl = activityMetrics.calculateDayCTL(mydb, d, actList,wl)
+        atl = activityMetrics.calculateDayATL(mydb, d, actList)
         yvalCTL.append(ctl)
         yvalATL.append(atl)
         yvalTSB.append(ctl - atl)
@@ -154,7 +165,7 @@ def plotLatLong(mydb, act):
     #ax.legend(facecolor="black", labelcolor='linecolor', frameon=False)
     return fig, ax
 
-def plotXY(data, legend=" "):
+def plotXY(data, legend=" ", histogram=False):
     '''
     Plots an XY plot of data
     :param data: [ [[x1, y1], [x2, y2], ..] , [[x1, y1], [x2, y2], ..] ]
@@ -175,10 +186,16 @@ def plotXY(data, legend=" "):
     ax = fig.add_subplot()
     xlist = np.array(xlist).T
     ylist = np.array(ylist).T
-    ax.plot(xlist, ylist, label=legend)
+    if(histogram):
+        binlist=[0, 10,20, 30, 40, 50,110]
+        ax.hist(ylist,bins=binlist, log=True)
+        ax.set_xticks(binlist)
+    else:
+        ax.plot(xlist, ylist, label=legend)
+        ax.legend(facecolor="black", labelcolor='linecolor', frameon=False, loc="upper left")
     ax.set_facecolor("black")
     fig.set_facecolor("black")
-    ax.legend(facecolor="black", labelcolor='linecolor', frameon=False, loc="upper left")
+
     return fig, ax
 def plotActivityMap(mydb, act):
     xlist, ylist, pointlist = getPointListfromActivity(mydb, act)
@@ -261,3 +278,122 @@ def relativetoFirstElement(ll):
     for i in ll:
         rv.append(i-ll[0])
     return rv
+
+def heatmap(data, row_labels, col_labels, ax=None,
+            cbar_kw=None, cbarlabel="", **kwargs):
+    """
+    Create a heatmap from a numpy array and two lists of labels.
+
+    Parameters
+    ----------
+    data
+        A 2D numpy array of shape (M, N).
+    row_labels
+        A list or array of length M with the labels for the rows.
+    col_labels
+        A list or array of length N with the labels for the columns.
+    ax
+        A `matplotlib.axes.Axes` instance to which the heatmap is plotted.  If
+        not provided, use current axes or create a new one.  Optional.
+    cbar_kw
+        A dictionary with arguments to `matplotlib.Figure.colorbar`.  Optional.
+    cbarlabel
+        The label for the colorbar.  Optional.
+    **kwargs
+        All other arguments are forwarded to `imshow`.
+    """
+
+    if ax is None:
+        ax = plt.gca()
+
+    if cbar_kw is None:
+        cbar_kw = {}
+
+    # Plot the heatmap
+    im = ax.imshow(data, **kwargs)
+
+    # Create colorbar
+    #cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
+    #cbar.ax.set_ylabel(cbarlabel, rotation=-90, va="bottom")
+
+    # Show all ticks and label them with the respective list entries.
+    ax.set_xticks(np.arange(len(data[0])), labels=col_labels, color="w")
+    ax.set_yticks(np.arange(len(data)), labels=row_labels, color="w")
+
+    # Let the horizontal axes labeling appear on top.
+    ax.tick_params(top=False, bottom=True,
+                   labeltop=False, labelbottom=True)
+
+    # Rotate the tick labels and set their alignment.
+    #plt.setp(ax.get_xticklabels(), rotation=-30, ha="right",
+             #rotation_mode="anchor")
+
+    # Turn spines off and create white grid.
+    ax.spines[:].set_visible(False)
+    ax.set_xticks(np.arange(len(data[0])+1)-.5, minor=True)
+    ax.set_yticks(np.arange(len(data)+1)-.5, minor=True)
+    ax.grid(which="minor", color="black", linestyle='-', linewidth=5)
+    ax.tick_params(which="minor", bottom=False, left=False)
+
+
+
+    return im
+
+
+def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
+                     textcolors=("black", "white"),
+                     threshold=None, **textkw):
+    """
+    A function to annotate a heatmap.
+
+    Parameters
+    ----------
+    im
+        The AxesImage to be labeled.
+    data
+        Data used to annotate.  If None, the image's data is used.  Optional.
+    valfmt
+        The format of the annotations inside the heatmap.  This should either
+        use the string format method, e.g. "$ {x:.2f}", or be a
+        `matplotlib.ticker.Formatter`.  Optional.
+    textcolors
+        A pair of colors.  The first is used for values below a threshold,
+        the second for those above.  Optional.
+    threshold
+        Value in data units according to which the colors from textcolors are
+        applied.  If None (the default) uses the middle of the colormap as
+        separation.  Optional.
+    **kwargs
+        All other arguments are forwarded to each call to `text` used to create
+        the text labels.
+    """
+
+    if not isinstance(data, (list, np.ndarray)):
+        data = im.get_array()
+
+    # Normalize the threshold to the images color range.
+    if threshold is not None:
+        threshold = im.norm(threshold)
+    else:
+        threshold = im.norm(data.max())/2.
+
+    # Set default alignment to center, but allow it to be
+    # overwritten by textkw.
+    kw = dict(horizontalalignment="center",
+              verticalalignment="center")
+    kw.update(textkw)
+
+    # Get the formatter in case a string is supplied
+    if isinstance(valfmt, str):
+        valfmt = matplotlib.ticker.StrMethodFormatter(valfmt)
+
+    # Loop over the data and create a `Text` for each "pixel".
+    # Change the text's color depending on the data.
+    texts = []
+    for i in range(data.shape[0]):
+        for j in range(data.shape[1]):
+            kw.update(color=textcolors[int(im.norm(data[i, j]) > threshold)])
+            text = im.axes.text(j, i, valfmt(data[i, j], None), **kw)
+            texts.append(text)
+
+    return texts
