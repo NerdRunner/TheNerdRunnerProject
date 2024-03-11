@@ -9,6 +9,7 @@ activitytable = "activities"
 userstats_health = "userhealth"
 userstats_general = "usergeneral"
 settings = "settings"
+trainingplantable="trainingplan"
 
 #Column names
 cn_trimp = "trimp"

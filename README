@@ -16,8 +16,13 @@ fitparse
 matplotlib
 customtkinter
 osmnx
+gpxpy
+tcxreader
+garth
 
 Versions:
+### 0.9
+Added first support for Trainingplans, Recordlist
 ### 0.81
 Global analysis: Histogram, Tilechart, Cumulated values
 ### 0.8

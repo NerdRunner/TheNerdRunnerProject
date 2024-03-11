@@ -7,7 +7,7 @@ import matplotlib
 import matplotlib.patches as patches
 import numpy as np
 import osmnx as ox
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt, ticker
 from matplotlib.dates import DateFormatter
 from matplotlib.figure import Figure
 from matplotlib.path import Path
@@ -22,9 +22,9 @@ from Sportsman import Sportsman
 from gui2 import lcarsSettings
 
 
-def totalperWeekPlot(mydb, columnName, year, cw_start, cw_end, actList):
+def totalperWeekPlot(mydb, columnName, year, cw_start, cw_end, actList, table=mysqlCredentials.activitytable, figsizea=4.5, figsizeb=4.5):
     '''
-    Plots the total values of columnName over given calendar weeks for all acitivities
+    Plots the total values of columnName over given calendar weeks for given list of activities
     :param mydb: MySQL-Handler
     :param columnName: Name of column for y-Values; get from mysqlCredentials.cn_xxx
     :param year: The year
@@ -41,7 +41,7 @@ def totalperWeekPlot(mydb, columnName, year, cw_start, cw_end, actList):
     al = mysqltools.makeORListfromActlist(actList)
     while d <= cw_end:
         d1, d2 = Utils.getDateRangeFromWeek(year,d)
-        sql = "SELECT "+columnName+" from " + mysqlCredentials.activitytable + " WHERE DATE(datum) >= '" + d1.strftime("%Y-%m-%d") + "' and DATE(datum) <= '" + d2.strftime("%Y-%m-%d")+"' and ("+al+")" #todo: hier weitermachen
+        sql = "SELECT "+columnName+" from " + table + " WHERE DATE(datum) >= '" + d1.strftime("%Y-%m-%d") + "' and DATE(datum) <= '" + d2.strftime("%Y-%m-%d")+"' and ("+al+")"
         mycursor.execute(sql)
         myresult = mycursor.fetchall()
         xval.append(d)
@@ -49,7 +49,7 @@ def totalperWeekPlot(mydb, columnName, year, cw_start, cw_end, actList):
         xticks.append(d)
         d=d+1
 
-    fig = Figure(figsize=(4.5,4.5), dpi=100)
+    fig = Figure(figsize=(figsizea,figsizeb), dpi=100)
     ax = fig.add_subplot()
     ax.bar(xval, yval)
     ax.set_xticks(xticks, minor=False)
@@ -187,9 +187,16 @@ def plotXY(data, legend=" ", histogram=False):
     xlist = np.array(xlist).T
     ylist = np.array(ylist).T
     if(histogram):
-        binlist=[0, 10,20, 30, 40, 50,110]
-        ax.hist(ylist,bins=binlist, log=True)
+        binlist=[0, 5, 10,20, 30, 40, 50,110] #TODO: Histogramm bins als Parameter übergeben
+        yl = []
+        for y in ylist:
+            for k in y:
+                if k>0:
+                    yl.append(k)
+
+        ax.hist(yl,bins=binlist, log=False, edgecolor="black")
         ax.set_xticks(binlist)
+        #ax.xaxis.set_major_locator(ticker.FixedLocator([2*x for x in binlist]))
     else:
         ax.plot(xlist, ylist, label=legend)
         ax.legend(facecolor="black", labelcolor='linecolor', frameon=False, loc="upper left")
@@ -247,8 +254,6 @@ def addHRZonebanner(mydb, ax, dt):
     :param dt: date 'd.m.Y'
     :return: -
     '''
-    #TODO: Check HR Ranges
-
     # Regeneration: <60%
     # GA1: 60-75%
     # GA2: 75-85%
@@ -351,7 +356,7 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
     im
         The AxesImage to be labeled.
     data
-        Data used to annotate.  If None, the image's data is used.  Optional.
+         used to annotate.  If None, the image's data is used.  Optional.
     valfmt
         The format of the annotations inside the heatmap.  This should either
         use the string format method, e.g. "$ {x:.2f}", or be a

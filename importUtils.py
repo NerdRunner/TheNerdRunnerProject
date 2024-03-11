@@ -25,6 +25,7 @@ def FitFileToTPList(f)->Trackpoint:
         mess = fitfile.get_messages("session")
         for t in mess:
             typ = t.get_value("sport")
+            totalTime=t.get_value("total_timer_time") #TODO: Prüfen, ob das auch die Nettozeit und nicht die Bruttozeit ist
         for record in fitfile.get_messages('record'):
             tp = Trackpoint()
             tp.lat = record.get_value('position_lat')
@@ -39,12 +40,16 @@ def FitFileToTPList(f)->Trackpoint:
             tp.hr = record.get_value('heart_rate')
             tp.speed = record.get_value('enhanced_speed')
             tp.typ = typ
+            tp.totalTime = totalTime
 
 
             if tp.lat is None: #If no gpsdata is available, e.g. indoor swimming, get the distance from the laps
                 d = 0
                 for lap in fitfile.get_messages('lap'):
-                    d+= lap.get_value('total_distance')
+                    dl= lap.get_value('total_distance')
+                    if dl is None:
+                        dl=0
+                    d+=dl
                 tp.distance = d
 
             tpList.append(tp)
@@ -124,7 +129,7 @@ def checkForMissingEntries(mydb, ff):
 
 def GPXFileToActivity(mydb, path):
     dir_list = []
-    dir_list += [each for each in os.listdir(path) if each.endswith('.gpx') and each.startswith('Move')]
+    dir_list += [each for each in os.listdir(path) if each.endswith('.gpx')]#and each.startswith('Move')]
     dir_list = checkForMissingEntries(mydb, dir_list)
     i = 0
     nFiles = len(dir_list)
@@ -202,6 +207,19 @@ def TCXFileToWorkout(mydb, path):
             else:
                 print("Not imported: "+ff)
     return
+
+def reimportAllData():
+    '''
+    Re-Imports all data (specific function for Simon
+    :return:
+    '''
+    mydb = mysqltools.connect()
+    TCXFileToWorkout(mydb, "/home/simon/Nextcloud/clientsync/Dokumente/laufen/garmin/")
+    GPXFileToActivity(mydb, "/home/simon/Nextcloud/clientsync/Dokumente/laufen/garmin/")
+    mysqltools.deleteDoubleEntries(mydb)
+
+    return
+
 
 #mydb = mysqltools.connect()
 #TCXFileToWorkout(mydb, "/home/simon/Nextcloud/clientsync/Dokumente/laufen/garmin/")

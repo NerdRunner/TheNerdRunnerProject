@@ -51,15 +51,20 @@ def createUpperPlots(main, mydb, preserveSettings=False):
     main.actBoxes.grid(column=0, row=1, padx=10, pady=10)
 
 def createLowerPlots(app, mydb, currcw, actList):
-    app.fig, app.ax = plotUtils.totalperWeekPlot(mysqltools.connect(), mysqlCredentials.cn_trimp, 2023, currcw - 10,
+    backWeeks = 0
+    if currcw>1:
+        backWeeks = currcw
+    if currcw>10:
+        backWeeks = 11
+    currYear = datetime.datetime.today().year
+    app.fig, app.ax = plotUtils.totalperWeekPlot(mysqltools.connect(), mysqlCredentials.cn_trimp, currYear, currcw - backWeeks+1,
                                                  currcw, actList)
+    plotUtils.setAxisColor(app.ax, lcarsSettings.yellow)
+
 
     app.fig2, app.ax2 = plotUtils.PMC(mydb, datetime.datetime.today(), 100, actList)
 
-    plotUtils.setAxisColor(app.ax, lcarsSettings.yellow)
-    plotUtils.setAxisColor(app.ax2, lcarsSettings.yellow)
 
-    plotUtils.setAxisColor(app.ax, lcarsSettings.yellow)
     plotUtils.setAxisColor(app.ax2, lcarsSettings.yellow)
 
     app.plot = plotList(app, [app.fig, app.fig2])
@@ -107,9 +112,15 @@ def createRightFrame(main, mydb, actList):
     # Calculate relavtive values
     for i, ll in enumerate(sum):
         if(i<len(sum)-1):
-            relkm = float(ll[2])/float(sum[i+1][2])*100
+            s=float(sum[i+1][2])
+            if s==0:
+                s=-1
+            relkm = float(ll[2])/s*100
             relkm = "{:2.0f}".format(relkm)+"%"
-            relTrimp = float(ll[4]) / float(sum[i + 1][4]) * 100
+            s = float(sum[i + 1][4])
+            if s==0:
+                s=-1
+            relTrimp = float(ll[4]) / s * 100
             relTrimp = "{:2.0f}".format(relTrimp)+"%"
             tf =[ll[0], ll[1], ll[2], relkm, ll[4], relTrimp]
             tf2+= str(ll[1])+"/"+str(ll[0])+": "+ll[2]+"km ("+relkm+") - "+str(ll[4])+" aTr ("+relTrimp+")\n"

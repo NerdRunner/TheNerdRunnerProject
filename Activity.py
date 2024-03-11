@@ -21,11 +21,13 @@ class Activity:
         self.start = tpList[0].timestamp
         self.trimp = self.calculateTRIMP(mydb)
         self.filename = file
+        #self.duration = (self.tpList[len(self.tpList) - 1].timestamp - self.tpList[0].timestamp).seconds
+        self.duration = tpList[0].totalTime
 
     def print(self):
         print("Type: ",self.tpList[0].typ)
         print("Start: ", self.tpList[0].timestamp)
-        print("Duration: ", self.tpList[len(self.tpList) - 1].timestamp - self.tpList[0].timestamp)
+        print("Duration: ", self.duration)
         print("Length [m]: ", self.getStrecke())
         print("Mean HR: ", self.meanHR())
         print("TRIMP: ", self.trimp)
@@ -117,7 +119,7 @@ class Activity:
         '''
 
         mycursor = mydb.cursor()
-        sql = "INSERT INTO activities VALUES (%s, %s, %s, %s, %s, %s, ST_GeomFromText(%s), %s, ST_GeomFromText(%s))"
+        sql = "INSERT INTO activities VALUES (%s, %s, %s, %s, %s, %s, ST_GeomFromText(%s), %s, ST_GeomFromText(%s), %s)"
         hrlist = None
         latlonlist = None
         tp0 = self.getTPList()[0]
@@ -125,7 +127,7 @@ class Activity:
         latlonlist = self.createPointListforMysql("latlon")
         if self.getTPList() is not None:
             val = (None, self.filename, self.getTPList()[0].timestamp, self.getTPList()[0].typ, self.getStrecke(),
-            self.meanHR(), hrlist, self.getTrimp(), latlonlist)
+            self.meanHR(), hrlist, self.getTrimp(), latlonlist, self.duration)
         else:
             val = (self.getTPList[0].timestamp, None, None, self.getStrecke(), hrlist, self.getTrimp(), latlonlist)
 

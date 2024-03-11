@@ -93,7 +93,7 @@ class main_globalanalyze():
             #upperrightFrame -
             #https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
             months=[1,2,3,4,5,6,7,8,9,10,11,12]
-            dists = [[50,200], [40,50],[30,40],[20,30],[10,20], [5,10]]
+            dists = [[50,200], [40,50],[30,40],[20,30],[10,20], [5,10], [0,5]]
             harvest=[]
             i=0
             while i < len(dists):
@@ -102,9 +102,11 @@ class main_globalanalyze():
                     actyear=0
                     for y in years:
                         d2 = calendar.monthrange(y, m)[1]
+                        dist1=dists[i][0]*1000
+                        dist2= dists[i][1] * 1000
                         actyearRes = mysqltools.getActivitiesByDateRange(mydb, activitytype,
                                                                    datetime.date(y, m, 1), datetime.date(y, m,d2),
-                                                                   filter=[mysqlCredentials.cn_distance, dists[i][0]*1000,dists[i][1]*1000])
+                                                                   filter=[mysqlCredentials.cn_distance, dist1,dist2])
 
                         actyear+= len(actyearRes)
                     monthList.append(actyear)
@@ -166,7 +168,8 @@ class main_globalanalyze():
         yearFrame.button.configure(command=lambda: updatePlotFrames())
         yearFrame.grid(column=0, row=0, padx=10, pady=10, sticky="new")
 
-        activityFrame = framedBoxes(checkBoxFrame, "Activities", mysqltools.getActivitiesAndNumber(mydb,justNames=True), lcarsSettings.blue, None, button=False, autocheck=False)
+        al = mysqltools.getActivitiesAndNumber(mydb,justNames=True)
+        activityFrame = framedBoxes(checkBoxFrame, "Activities", al, lcarsSettings.blue, None, button=False, autocheck=False)
         activityFrame.grid(column=0, row=1, padx=10, pady=10, sticky="new")
         prefAct = mysqltools.getSetting(mydb, "preferredActType")[2]
         activityFrame.set([[prefAct, True]])
@@ -193,8 +196,8 @@ class main_globalanalyze():
         main.mainloop()
 
 
-mydb = mysqltools.connect()
-nm = main_globalanalyze(mydb)
+#mydb = mysqltools.connect()
+#nm = main_globalanalyze(mydb)
 
 #yy = mysqltools.getYears(mydb)
 #print(yy)

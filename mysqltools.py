@@ -69,6 +69,7 @@ def createSettingsTable(mydb):
 
     return
 
+#TODO: create trainingplan table
 
 def createAllTables(mydb):
     '''
@@ -161,7 +162,7 @@ def getLastActivities(mydb, activityType, lastN):
     myresult = mycursor.fetchall()
     return myresult
 
-def getActivitiesAndNumber(mydb, justNames=False):
+def getActivitiesAndNumber(mydb, justNames=False, table=mysqlCredentials.activitytable):
     '''
     gets all Activitytypes in the database and how often they are in the database.
     gives just the names with argument justNames = True
@@ -170,7 +171,7 @@ def getActivitiesAndNumber(mydb, justNames=False):
     '''
     cursor = mydb.cursor()
     if justNames:
-        sql = "SELECT typ FROM " + mysqlCredentials.activitytable + " group by typ ORDER BY typ ASC"
+        sql = "SELECT typ FROM " + table + " group by typ ORDER BY typ ASC"
     else:
         sql = "SELECT typ, count(typ) FROM "+ mysqlCredentials.activitytable +" group by typ ORDER BY typ ASC"
     cursor.execute(sql)
@@ -213,13 +214,14 @@ def getByDateRange(mydb, col, actList, d1, d2):
     myresult = mycursor.fetchall()
     return myresult
 
-def getActivitiesByDateRange(mydb, act, d1, d2, filter=[]):
+def getActivitiesByDateRange(mydb, act, d1, d2, filter=[], table=mysqlCredentials.activitytable, orderValue="datum", orderType="DESC", limit=1000000000):
     '''
     Gets all activities for a given date range
     :param mydb: MYSQL-Handler
     :param act: Activity-Type --> list
     :param d1: first date
     :param d2: second date
+    :param filter: [columntoFilter, v1, v2]. Gets all activities for which v1<"columntoFilter"<v2
     :return:
     '''
     mycursor = mydb.cursor()
@@ -230,10 +232,10 @@ def getActivitiesByDateRange(mydb, act, d1, d2, filter=[]):
             actStr+="typ='"+a +"' OR "
         actStr=actStr[:-4]
     if len(filter)>0:
-        sql = "SELECT * from " + mysqlCredentials.activitytable + " WHERE ("+actStr+") and (DATE(datum) >= '" + d1.strftime(
-        "%Y-%m-%d") + "' and DATE(datum) <= '" + d2.strftime("%Y-%m-%d") + "') AND ("+filter[0]+ " >"+str(filter[1])+ " AND "+filter[0]+" <"+str(filter[2])+") ORDER by datum DESC"
+        sql = "SELECT * from " + table + " WHERE ("+actStr+") and (DATE(datum) >= '" + d1.strftime(
+        "%Y-%m-%d") + "' and DATE(datum) <= '" + d2.strftime("%Y-%m-%d") + "') AND ("+filter[0]+ " >"+str(filter[1])+ " AND "+filter[0]+" <"+str(filter[2])+") ORDER by "+orderValue + " "+orderType + " LIMIT "+str(limit)
     else:
-        sql = "SELECT * from " + mysqlCredentials.activitytable + " WHERE ("+actStr+") and (DATE(datum) >= '" + d1.strftime(
+        sql = "SELECT * from " + table + " WHERE ("+actStr+") and (DATE(datum) >= '" + d1.strftime(
         "%Y-%m-%d") + "' and DATE(datum) <= '" + d2.strftime("%Y-%m-%d") + "') ORDER by datum DESC"
     #sql = "SELECT CAST(datum as DATE), typ, " + mysqlCredentials.cn_distance + " from " + mysqlCredentials.activitytable + " WHERE (" + actStr + ") and (DATE(datum) >= '" + d1.strftime(
     #    "%Y-%m-%d") + "' and DATE(datum) <= '" + d2.strftime("%Y-%m-%d") + "') ORDER by datum DESC"
@@ -288,7 +290,23 @@ def getCummulativeValues(mydb, yearList, actList, datatype, cummulate=True):
         cumGes.append(cum)
     return cumGes
 
+def deleteDoubleEntries(mydb):
+    '''
+    Deltes double entries. Searches by Startdate and Time
+    :param mydb:
+    :return:
+    '''
+    mycursor = mydb.cursor()
+    sql = "DELETE t1 FROM activities t1 INNER JOIN activities t2 WHERE t1.id < t2.id AND t1.datum = t2.datum" #todo: Machen, dass es auch von Python aus klappt. Direkt in MYSQL funzt es
+    mycursor.execute(sql)
+
+    return
+
+
+
+
 #mydb = mysqltools.connect()
+#deleteDoubleEntries(mydb)
 #cumm = getCummulativeDistancesPerYear(mydb, 2023, ["cycling", "running"])
 #cumGes = getCummulativeDistances(mydb, [2021, 2022, 2023], ["cycling", "running"])
 #print("ende")

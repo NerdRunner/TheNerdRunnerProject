@@ -9,6 +9,8 @@ import mysqltools
 
 from framedArea import framedArea
 from gui2.main_globalanalyze import main_globalanalyze
+from gui2.main_records import main_records
+from gui2.main_trainingplan import main_trainingplan
 from lcarsButton import lcarsButton
 from main_analyze import main_analyze
 from framedBoxes import framedBoxes
@@ -58,11 +60,17 @@ btn3.grid(row=4, column=0)
 btn4 = lcarsButton(buttonFrame, "Global analysis", lcarsSettings.magenta, command=lambda: main_globalanalyze(mydb))
 btn4.grid(row=5, column=0)
 
+btn5 = lcarsButton(buttonFrame, "Trainingplans", lcarsSettings.magenta, command=lambda: main_trainingplan(mydb))
+btn5.grid(row=6, column=0)
+
+btn5 = lcarsButton(buttonFrame, "Records", lcarsSettings.magenta, command=lambda: main_records(mydb))
+btn5.grid(row=7, column=0)
+
 ### Upper Frame ###
 guiFunctions.createUpperPlots(upperFrame, mydb)
 
 ### Lower Frame ###
-#guiFunctions.createLowerPlots(lowerFrame, mydb, currcw) #TODO: hier rauskommentieren
+#guiFunctions.createLowerPlots(lowerFrame, mydb, currcw)
 
 ### Right Frame ###
 rightFrame = framedArea(main, lcarsSettings.yellow, bar=False)
