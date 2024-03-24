@@ -25,7 +25,7 @@ def FitFileToTPList(f)->Trackpoint:
         mess = fitfile.get_messages("session")
         for t in mess:
             typ = t.get_value("sport")
-            totalTime=t.get_value("total_timer_time") #TODO: Prüfen, ob das auch die Nettozeit und nicht die Bruttozeit ist
+            totalTime=t.get_value("total_timer_time")
         for record in fitfile.get_messages('record'):
             tp = Trackpoint()
             tp.lat = record.get_value('position_lat')

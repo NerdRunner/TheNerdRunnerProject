@@ -75,7 +75,7 @@ class main_trainingplan():
         buttTPList.configure(command=lambda: updateRightFrame())
 
         tpList = mysqltools.getActivitiesAndNumber(mydb, justNames=True, table=mysqlCredentials.trainingplantable)
-        #al = mysqltools.getActivitiesAndNumber(mydb, justNames=True) #TODO: Prüfen, wieso bei al in der Checkbox keine geschweiften Klammern dargestellt werden
+        #al = mysqltools.getActivitiesAndNumber(mydb, justNames=True) TDO: Prüfen, wieso bei al in der Checkbox keine geschweiften Klammern dargestellt werden
 
 
         planList = framedBoxes(leftFrame,"Plans", tpList, lcarsSettings.yellow, None, False, autocheck=False)

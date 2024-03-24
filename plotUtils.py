@@ -165,7 +165,7 @@ def plotLatLong(mydb, act):
     #ax.legend(facecolor="black", labelcolor='linecolor', frameon=False)
     return fig, ax
 
-def plotXY(data, legend=" ", histogram=False):
+def plotXY(data, legend=" ", histogram=False, binlist=[0, 5, 10,20, 30, 40, 50,110]):
     '''
     Plots an XY plot of data
     :param data: [ [[x1, y1], [x2, y2], ..] , [[x1, y1], [x2, y2], ..] ]
@@ -187,7 +187,6 @@ def plotXY(data, legend=" ", histogram=False):
     xlist = np.array(xlist).T
     ylist = np.array(ylist).T
     if(histogram):
-        binlist=[0, 5, 10,20, 30, 40, 50,110] #TODO: Histogramm bins als Parameter übergeben
         yl = []
         for y in ylist:
             for k in y:

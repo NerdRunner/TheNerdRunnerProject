@@ -57,6 +57,18 @@ def createUserGeneralTable(mydb):
 
     return
 
+def createTrainingplanTable(mydb):
+    '''
+    Creates the table for user a training plan
+    :param mydb:
+    :return:
+    '''
+    mycursor = mydb.cursor()
+    mycursor.execute(
+        "CREATE TABLE "+mysqlCredentials.trainingplantable+" (id INT AUTO_INCREMENT PRIMARY KEY, typ TEXT, datum DATETIME, strecke INT, kind TEXT)")
+
+    return
+
 def createSettingsTable(mydb):
     '''
     Creates the table for the Gui settings
@@ -69,7 +81,7 @@ def createSettingsTable(mydb):
 
     return
 
-#TODO: create trainingplan table
+
 
 def createAllTables(mydb):
     '''
@@ -81,6 +93,7 @@ def createAllTables(mydb):
     createUserHealthTable(mydb)
     createUserGeneralTable(mydb)
     createSettingsTable(mydb)
+    createTrainingplanTable(mydb)
 
 def setSetting(mydb, name, value):
     '''
