@@ -1,12 +1,15 @@
 import datetime
 import os
+from time import strptime
 
 from fitparse import FitFile
 
 import mysqlCredentials
 import mysqltools
 from Activity import Activity
+from Sportsman import Sportsman
 from Trackpoint import Trackpoint
+import csv
 
 import gpxpy
 from tcxreader.tcxreader import TCXReader, TCXTrackPoint
@@ -220,8 +223,27 @@ def reimportAllData():
 
     return
 
+def importRestHRTable(str, mydb):
+    '''
+    imports the CSV file with the restHR into the database
+    :param str: file with structure id	date	time	heartRate  restHR (got from runalyze.com)
+    :return:
+    '''
+    sm = Sportsman("0","0","0")
+    sm.getFromDB(mydb)
+
+    with open(str, 'r') as file:
+        csvreader = csv.reader(file)
+        for row in csvreader:
+            sp = row[1].split("-") #fjdkshfjkds
+            dt = datetime.datetime(int(sp[0]),int(sp[1]), int(sp[2]),0,0,0)
+            sm.addVitalValuesToDatabase(dt,int(row[2]),int(row[3]), 0)
+    pass
+
+
 
 #mydb = mysqltools.connect()
 #TCXFileToWorkout(mydb, "/home/simon/Nextcloud/clientsync/Dokumente/laufen/garmin/")
 #GPXFileToActivity(mydb, "/home/simon/Nextcloud/clientsync/Dokumente/laufen/garmin/")
 #print("Import")
+#importRestHRTable("/home/simon/Downloads/heart-rate-rest.csv", mydb)

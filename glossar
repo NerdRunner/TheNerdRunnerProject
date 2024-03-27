@@ -1,3 +1,4 @@
 TRIMP: Calculation according to https://fellrnr.com/wiki/TRIMP
 CTL: Cronic Training Load: Mean value of all TRIMP values over the last 42 days
 ATL: Acute Training Load: Mean value of all TRIMP values over the last 7 days
+Monotony = average(TRIMP)/stddev(TRIMP)

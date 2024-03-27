@@ -7,6 +7,7 @@ import numpy as np
 import Utils
 import mysqlCredentials
 import mysqltools
+import statistics
 
 def averageDailyTrimps(mydb, d1, nDays, actList,wl=[]):
     '''
@@ -59,6 +60,25 @@ def calculateDayATL(mydb, d1, actList):
     atl = averageDailyTrimps(mydb, d1, 7, actList, [1,0.8,0.7,0.6,0.4,0.2,0.1])
     return atl
 
+def monotony(mydb, d, actList):
+    '''
+    calculates the training monotony Monotony = average(TRIMP)/stddev(TRIMP) TRIMP values over 7 days
+
+    :param mydb:
+    :param act:
+    :param d1:
+    :return:
+    '''
+
+    d2 = d - timedelta(days=7)
+    res = mysqltools.getByDateRange(mydb, mysqlCredentials.cn_trimp, actList, d, d2)
+    tl = [a[1] for a in res]
+    mon = 0
+    if len(tl)>0:
+        avg =  (sum(tl)/len(tl))
+        st = statistics.pstdev(tl)
+        mon = avg/st
+    return mon
 def summary(mydb, act, d1, d2):
     '''
     Gets the summary of an activity type between two dates

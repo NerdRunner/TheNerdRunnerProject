@@ -80,11 +80,13 @@ def createRightFrame(main, mydb, actList):
     #actList = ["running"]
     currCTL = activityMetrics.calculateDayCTL(mydb, today, actList)
     currATL = activityMetrics.calculateDayATL(mydb, today, actList)
+    monotony = activityMetrics.monotony(mydb,today, actList)
     sum = "Current stats:\n\n"
     sum += "CTL: " + "{:4.2f}".format(currCTL) + "\n"
     sum += "ATL: " + "{:4.2f}".format(currATL) + "\n"
     sum += "TSB: " + "{:4.2f}".format(currCTL - currATL) + "\n"
     sum += "Ratio (0.8-1.3): " + "{:4.2f}".format(currATL / currCTL) + "\n"
+    sum += "Monotony: (< 1.5): " + "{:4.2f}".format(monotony) + "\n"
     textFieldRight.configure(text=sum)
 
     #### Comparison weekly/monthly stats ###

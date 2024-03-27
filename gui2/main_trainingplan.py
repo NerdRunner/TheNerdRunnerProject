@@ -83,7 +83,7 @@ class main_trainingplan():
 
         main.mainloop()
 
-#mydb = mysqltools.connect()
+mydb = mysqltools.connect()
 
 #tpList = mysqltools.getActivitiesAndNumber(mydb, justNames=True, table="trainingplan")
 #test = tpUtils.getTrainingplan(mydb, "Osterbackyard 2023")

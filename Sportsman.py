@@ -68,13 +68,13 @@ class Sportsman:
          :param weight: current weight in kg
          :return:
          '''
-
-        mydb = mysqltools.connect()
-        mycursor = mydb.cursor()
-        sql = "INSERT INTO " + mysqlCredentials.userstats_health + " VALUES (%s, %s, %s, %s, %s)"
-        val = (None, date, maxHR, restHR, weight)
-        mycursor.execute(sql, val)
-        mydb.commit()
+        if maxHR != 0:
+            mydb = mysqltools.connect()
+            mycursor = mydb.cursor()
+            sql = "INSERT INTO " + mysqlCredentials.userstats_health + " VALUES (%s, %s, %s, %s, %s)"
+            val = (None, date, maxHR, restHR, weight)
+            mycursor.execute(sql, val)
+            mydb.commit()
         return
     def addTodaysVitalValuesToDatabase(self, maxHR, restHR, weight):
         self.addVitalValuesToDatabase(datetime.today(), maxHR, restHR, weight)

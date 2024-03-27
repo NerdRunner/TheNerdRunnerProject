@@ -177,8 +177,8 @@ class main_records():
 
 
 
-mydb = mysqltools.connect()
-nm = main_records(mydb)
+#mydb = mysqltools.connect()
+#nm = main_records(mydb)
 
 #yy = mysqltools.getYears(mydb)
 #print(yy)
