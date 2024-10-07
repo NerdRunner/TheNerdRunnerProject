@@ -80,7 +80,7 @@ def createRightFrame(main, mydb, actList):
     #actList = ["running"]
     currCTL = activityMetrics.calculateDayCTL(mydb, today, actList)
     currATL = activityMetrics.calculateDayATL(mydb, today, actList)
-    monotony = activityMetrics.monotony(mydb,today, actList)
+    monotony = activityMetrics.monotony(mydb,today)
     sum = "Current stats:\n\n"
     sum += "CTL: " + "{:4.2f}".format(currCTL) + "\n"
     sum += "ATL: " + "{:4.2f}".format(currATL) + "\n"

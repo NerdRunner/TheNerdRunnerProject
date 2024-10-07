@@ -218,9 +218,9 @@ def plotActivityMap(mydb, act):
         G = ox.graph_from_bbox(max_y, min_y, max_x, min_x, network_type='walk', simplify=True)
         ox.settings.log_console=True
         # Plot
-        fig, ax = ox.plot_graph(G, edge_color='k', bgcolor='w', show=False, close=False, figsize=(5,2.5))
+        fig, ax = ox.plot_graph(G, edge_color='k', bgcolor='w', show=False, close=False)#, figsize=(5,2.5))
         path = Path(plinv)
-        patch = patches.PathPatch(path, edgecolor='red', fill=False, lw=2)
+        patch = patches.PathPatch(path, edgecolor='red', fill=False, lw=1)
         ax.add_patch(patch)
     #plt.show()
     return fig, ax
@@ -401,3 +401,4 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
             texts.append(text)
 
     return texts
+

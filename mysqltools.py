@@ -220,9 +220,13 @@ def getByDateRange(mydb, col, actList, d1, d2):
     :return: (date, col)
     '''
     mycursor = mydb.cursor()
-    actreq = makeORListfromActlist(actList)
-    sql = "SELECT datum," + col + " from " + mysqlCredentials.activitytable + " WHERE DATE(datum) <= '" + d1.strftime(
+    if len(actList)>0:
+        actreq = makeORListfromActlist(actList)
+        sql = "SELECT datum," + col + " from " + mysqlCredentials.activitytable + " WHERE DATE(datum) <= '" + d1.strftime(
         "%Y-%m-%d") + "' and DATE(datum) >= '" + d2.strftime("%Y-%m-%d") + "' and ("+actreq + " ) ORDER by datum DESC"
+    else:
+        sql = "SELECT datum," + col + " from " + mysqlCredentials.activitytable + " WHERE DATE(datum) <= '" + d1.strftime(
+            "%Y-%m-%d") + "' and DATE(datum) >= '" + d2.strftime("%Y-%m-%d") + "' ORDER by datum DESC"
     mycursor.execute(sql)
     myresult = mycursor.fetchall()
     return myresult
@@ -314,6 +318,21 @@ def deleteDoubleEntries(mydb):
     mycursor.execute(sql)
 
     return
+
+def getSingleActivity(mydb, act):
+    '''
+    get a single actitivty, Identified by its filename
+    :param mydb:
+    :param act:
+    :return:
+    '''
+    mycursor = mydb.cursor()
+
+    query = "SELECT * FROM "+mysqlCredentials.activitytable +" WHERE dateiname= '"+act+"'"
+
+    mycursor.execute(query)
+    myresult = mycursor.fetchall()
+    return myresult
 
 
 

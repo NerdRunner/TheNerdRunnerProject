@@ -102,8 +102,10 @@ class main_records():
             for data in recordList:
             #data=recordList[0]
                 dt = [[[d[0].date(),d[2]/60/60] for d in data]]
-                fig, ax = plotUtils.plotXY(dt, legend=str(params[6][i]/1000))
-                fig.set_figheight(1.0)
+                leg=str(params[6][i] / 1000) +" (n=" + str(len(dt[0]))+ ")"
+
+                fig, ax = plotUtils.plotXY(dt, legend=leg)
+                fig.set_figheight(1.5)
                 fig.tight_layout()
                 rightFrame.plot = plotList(rightFrame, [fig])
                 rightFrame.plot.grid(row=i, column=0, padx=10, pady=0, sticky="nsw")

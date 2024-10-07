@@ -21,6 +21,8 @@ tcxreader
 garth
 
 Versions:
+### 0.91
+Added Monotony
 ### 0.9
 Added first support for Trainingplans, Recordlist
 ### 0.81
